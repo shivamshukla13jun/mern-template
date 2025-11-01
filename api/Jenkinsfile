@@ -1,0 +1,90 @@
+pipeline {
+    agent any
+
+    environment {
+        DEPLOY_DIR = "/home/staging.api.freightbooks.net/public_html"
+        SSH_KEY = "/var/jenkins_home/.ssh/id_rsa"
+        REMOTE_USER = "root"
+        SERVER_IP = "192.168.168.199"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'dev',
+                    url: 'https://github.com/winggs-team/freightbooks-api.git',
+                    credentialsId: 'github-token'
+            }
+        }
+
+        stage('Install Dependencies Locally') {
+            steps {
+                echo '📦 Installing local npm dependencies...'
+                sh 'npm install'
+            }
+        }
+
+        stage('Backup & Prepare Remote Directory') {
+            steps {
+                echo '🛡️ Backing up existing deployment...'
+                script {
+                    def timestamp = sh(script: "date +%F_%H-%M-%S", returnStdout: true).trim()
+                    def backupDir = "${DEPLOY_DIR}_backup_${timestamp}"
+
+                    sh """
+                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ${REMOTE_USER}@${SERVER_IP} 'bash -c "
+                            set -e
+                            if [ -d \\"${DEPLOY_DIR}\\" ]; then
+                                mv \\"${DEPLOY_DIR}\\" \\"${backupDir}\\"
+                            fi
+                            mkdir -p \\"${DEPLOY_DIR}\\"
+                        "'
+                    """
+                }
+            }
+        }
+
+      stage('Sync Files to Staging Server') {
+    steps {
+        echo '📤 Syncing files to remote staging server...'
+        sh """
+            rsync -avz -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
+            --delete \
+            --exclude .git \
+            --exclude node_modules \
+            --exclude '*.log' \
+            --exclude tmp \
+            ./ \
+            ${REMOTE_USER}@${SERVER_IP}:${DEPLOY_DIR}
+        """
+            }
+        }
+
+        stage('Install & Start App on Remote') {
+            steps {
+                echo '🚀 Installing dependencies & starting app on remote server...'
+                sh """
+                    ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ${REMOTE_USER}@${SERVER_IP} 'bash -c "
+                        cd ${DEPLOY_DIR}
+                        npm install
+                        npm install express
+                        npm run start:pm2 || true
+                        npm run restart:pm2 || true
+                        sudo env PATH=\\\$PATH:/usr/bin pm2 startup systemd -u root --hp /root
+                        pm2 save
+                        pm2 restart all
+                    "'
+                """
+            }
+        }
+    }
+
+    post {
+        failure {
+            echo "❌ Deployment to STAGING failed. Check logs!"
+        }
+        success {
+            echo "✅ Deployment to STAGING succeeded!"
+        }
+    }
+}

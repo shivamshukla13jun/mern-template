@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Resolver, useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import apiService from '@/service/apiService';
 import {
@@ -52,7 +52,7 @@ const UserForm: React.FC<UserFormProps> = ({
     setValue,
     control
   } = useForm<IUser>({
-    resolver: yupResolver(Userschema) as Resolver<IUser>,
+    resolver: zodResolver(Userschema) as Resolver<IUser>,
     defaultValues: defaulUsertValues
   });
 

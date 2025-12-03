@@ -1,13 +1,11 @@
-import * as Yup from 'yup';
+import { z } from 'zod';
 
-const loginSchema = Yup.object().shape({
-  email: Yup.string()
-    .label('Email Address')
+const loginSchema = z.object({
+  email: z.string()
     .email('Please enter a valid email address')
-    .required('Please enter your email address to login'),
-  password: Yup.string()
-    .label('Password')
-    .required('Please enter your password'),
+    .min(1, 'Please enter your email address to login'),
+  password: z.string()
+    .min(1, 'Please enter your password'),
 });
 
 const defaultLoginValues={

@@ -1,6 +1,6 @@
 
 
-import { generatePropertiesFromYup } from './expressListRoutes'; // Fixed import
+import { generatePropertiesFromZod } from './expressListRoutes'; // Fixed import
 import { AuthLoginSchema } from 'microservices/auth-service/validate';
 import { userRegistrationSchema, userUpdateSchema } from 'microservices/user-service/user.validation';
 const commonfieldsDisabled = ['createdAt', 'updatedAt','createdBy','updatedBy','userId','_id','files','deletedfiles'];
@@ -11,7 +11,7 @@ const DataTransform = (
     isJson: boolean = false,
     field?: FieldType
   ): Record<string, any> => {
-    const schemaProperties = generatePropertiesFromYup(schema, commonfieldsDisabled);
+    const schemaProperties = generatePropertiesFromZod(schema, commonfieldsDisabled);
     const result: Record<string, any> = {};
   
     if (isJson && field === 'loadData') {

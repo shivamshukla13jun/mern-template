@@ -17,6 +17,7 @@ declare module 'express-session' {
     iv: string;
     createdAt?: number;
     user:IUserDocument
+    
   }
 }
 // === Session Middleware ===
@@ -25,6 +26,7 @@ export const sessionMiddleware = session({
   genid: () => new mongoose.Types.ObjectId().toString(), // Generate custom session ID
   secret: JWT_SECRET,
   resave: false,
+  rolling:true,
   saveUninitialized: false,
   store: sessionStore,
   cookie: {

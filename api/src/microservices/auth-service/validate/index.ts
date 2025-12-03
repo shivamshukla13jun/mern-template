@@ -1,23 +1,22 @@
 
-import * as yup from 'yup';
+import { z } from 'zod';
 import { Role, ROLES } from '../types';
 
-const AuthRegisterSchema=yup.object().shape({
-    name: yup.string()
-       .required("Name is required")
+const AuthRegisterSchema = z.object({
+    name: z.string()
        .min(3, "Name must be at least 3 characters long")
        .max(50, "Name must be at most 50 characters long"),
-       email: yup.string().required("Email is required")
+    email: z.string()
        .email("Email must be a valid email address")
        .max(100, "Email must be at most 100 characters long"),
-       password: yup.string().required("Password is required")
+    password: z.string()
        .min(8, "Password must be at least 8 characters long"),
-       role: yup.string().oneOf(Object.values(Role), "Invalid role").required("Role is required")
-       .min(1, "At least one role is required"),
+    role: z.enum(Object.values(Role) as [string, ...string[]])
 })
-const AuthLoginSchema=yup.object().shape({
-    email:yup.string().email().required('Email is required'),
-    password:yup.string().required('Password is required')
+
+const AuthLoginSchema = z.object({
+    email: z.string().email(),
+    password: z.string()
 })
 
 export {AuthRegisterSchema,AuthLoginSchema}

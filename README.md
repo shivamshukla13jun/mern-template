@@ -1,6 +1,6 @@
-# E-commerce Microservices Platform
+# MERN Template Microservices Platform
 
-A full-stack e-commerce application built with microservices architecture, featuring Redis caching, RabbitMQ message queuing, and a modern React frontend.
+A full-stack application built with microservices architecture, featuring Redis caching, RabbitMQ message queuing, and a modern React frontend.
 
 ## 🏗️ Architecture Overview
 
@@ -70,7 +70,7 @@ Update the `.env` file with your configuration:
 ```env
 NODE_ENV=development
 PORT=3000
-MONGO_URI=mongodb://localhost:27017/ecommerce
+MONGO_URI=mongodb://localhost:27017/mern-template
 REDIS_HOST=127.0.0.1
 REDIS_PORT=6379
 RABBITMQ_HOST=localhost
@@ -123,42 +123,10 @@ The application will be available at:
 
 ## 📚 API Documentation
 
-### Product Service
-- `GET /api/products/products` - Get all products
-- `GET /api/products/products/:id` - Get product by ID
-- `POST /api/products/products` - Create product (Admin)
-- `PUT /api/products/products/:id` - Update product (Admin)
-- `DELETE /api/products/products/:id` - Delete product (Admin)
-- `GET /api/products/categories` - Get categories
-- `GET /api/products/products/search` - Search products
-
-### Order Service
-- `POST /api/orders/orders` - Create order
-- `GET /api/orders/orders/my` - Get user orders
-- `GET /api/orders/orders/:id` - Get order by ID
-- `PATCH /api/orders/orders/:id/status` - Update order status
-- `PATCH /api/orders/orders/:id/cancel` - Cancel order
-
-### Payment Service
-- `POST /api/payments/payments/process` - Process payment
-- `GET /api/payments/payments/my` - Get user payments
-- `GET /api/payments/payments/:id` - Get payment by ID
-- `POST /api/payments/payments/:id/refund` - Process refund
-
-### Inventory Service
-- `POST /api/inventory/inventory/reserve` - Reserve inventory
-- `POST /api/inventory/inventory/release` - Release inventory
-- `PATCH /api/inventory/inventory/adjust` - Adjust inventory
-- `POST /api/inventory/inventory/restock` - Restock inventory
-- `GET /api/inventory/inventory/low-stock` - Get low stock items
 
 ## 🔄 Message Queue Events
 
 The system uses RabbitMQ for event-driven communication:
-
-### Payment Events
-- `payment.processed` - Payment completed/failed
-- `payment.refunded` - Refund processed
 
 ## 🗄️ Database Schema
 
@@ -208,79 +176,6 @@ The system uses RabbitMQ for event-driven communication:
   }
 ```
 
-## 🧪 Testing
-
-Run tests for the backend:
-```bash
-cd ecom-api
-npm test
-```
-
-Run tests for the frontend:
-```bash
-cd ecom-client
-npm test
-```
-
-## 🚀 Deployment
-
-### Docker Deployment
-
-Create `docker-compose.yml`:
-```yaml
-version: '3.8'
-services:
-  mongodb:
-    image: mongo:5
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-
-  redis:
-    image: redis:6
-    ports:
-      - "6379:6379"
-
-  rabbitmq:
-    image: rabbitmq:3-management
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-
-  api:
-    build: ./api
-    ports:
-      - "5070:5070"
-    environment:
-      - NODE_ENV=production
-      - MONGO_URI=mongodb://mongodb:27017/ecommerce
-      - REDIS_HOST=redis
-      - RABBITMQ_HOST=rabbitmq
-    depends_on:
-      - mongodb
-      - redis
-      - rabbitmq
-
-  client:
-    build: ./client
-    ports:
-      - "5174:5174"
-    depends_on:
-      - api
-
-volumes:
-  mongodb_data:
-```
-
-Deploy:
-```bash
-docker-compose up -d
-```
-
 ## 🔧 Configuration
 
 ### Environment Variables
@@ -296,8 +191,6 @@ Key environment variables for the backend:
 | `REDIS_PORT` | Redis port | `6379` |
 | `RABBITMQ_HOST` | RabbitMQ host | `localhost` |
 | `RABBITMQ_PORT` | RabbitMQ port | `5672` |
-| `JWT_SECRET` | JWT secret key | Required |
-
 ### Redis Configuration
 
 Redis is used for:
@@ -312,26 +205,4 @@ RabbitMQ is used for:
 - Event-driven communication between services
 - Asynchronous processing
 - Notification queuing
-- Inventory updates
 
-## 🔮 Roadmap
-
-### Upcoming Features
-- [ ] Advanced analytics dashboard
-- [ ] Mobile app (React Native)
-- [ ] Advanced search with Elasticsearch
-- [ ] Recommendation engine
-- [ ] Multi-language support
-- [ ] Advanced reporting
-- [ ] API rate limiting improvements
-- [ ] GraphQL API
-- [ ] Microservices monitoring
-
-### Performance Improvements
-- [ ] Database query optimization
-- [ ] CDN integration
-- [ ] Image optimization
-- [ ] Caching strategies
-- [ ] Load balancing
-
----

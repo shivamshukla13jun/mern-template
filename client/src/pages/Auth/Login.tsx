@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Box, Button, Container, TextField, Typography, Checkbox, FormControlLabel, Stack, } from '@mui/material';
 import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useDispatch } from 'react-redux';
 import { defaultLoginValues, loginSchema } from '@/pages/Auth/Schema/loginSchema';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -26,7 +26,7 @@ const Login = () => {
     handleSubmit,
     formState: { errors },
   } = useForm({
-    resolver: yupResolver(loginSchema),
+    resolver: zodResolver(loginSchema),
     defaultValues: defaultLoginValues,
   });
   const onSubmit = async (data: any) => {
@@ -138,7 +138,7 @@ const Login = () => {
                 placeholder="Email Address *"
                 {...register('email')}
                 error={!!errors.email}
-                helperText={errors.email?.message}
+                helperText={errors.email?.message as string}
                 sx={{ mb: 2 }}
               />
               <TextField
@@ -147,7 +147,7 @@ const Login = () => {
                 placeholder="Password *"
                 {...register('password')}
                 error={!!errors.password}
-                helperText={errors.password?.message}
+                helperText={errors.password?.message as string}
                 sx={{ mb: 2 }}
               />
               {error && <Box sx={{color:"red"}}>{error}</Box>}

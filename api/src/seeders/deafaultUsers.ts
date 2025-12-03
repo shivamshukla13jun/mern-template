@@ -4,7 +4,7 @@ import { Types } from "mongoose";
 export const defaultAdmin = (superAdminId:Types.ObjectId)=>{
     return {
         name: 'Admin',
-        email: 'admin@freightbooks.net',
+        email: 'shivamshukla@winggs.com',
         password: '12345678',
         role: Role.ADMIN,
         createdBy: superAdminId,

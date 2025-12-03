@@ -1,30 +1,31 @@
 import { Role } from "microservices/auth-service/types"
-import * as Yup from "yup"
-const userRegistrationSchema = Yup.object().shape({
-  name: Yup.string()
-    .required("Name is required")
+import { z } from "zod"
+
+const userRegistrationSchema = z.object({
+  name: z.string()
     .min(3, "Name must be at least 3 characters long")
     .max(50, "Name must be at most 50 characters long"),
-  email: Yup.string().required("Email is required")
+  email: z.string()
     .email("Email must be a valid email address")
     .max(100, "Email must be at most 100 characters long"),
-  password: Yup.string().required("Password is required")
+  password: z.string()
     .min(8, "Password must be at least 8 characters long"),
-  role: Yup.string().oneOf(Object.values(Role), "Invalid role").required("Role is required")
-    .min(1, "At least one role is required"),
-
+  role: z.enum(Object.values(Role) as [string, ...string[]])
 })
 
-const userUpdateSchema = Yup.object().shape({
-  name: Yup.string(),
-  email: Yup.string().email("Email must be a valid email address"),
-  password: Yup.string(),
-  role: Yup.string().oneOf(Object.values(Role), "Invalid role"),
+const userUpdateSchema = z.object({
+  name: z.string().optional(),
+  email: z.string().email("Email must be a valid email address").optional(),
+  password: z.string().optional(),
+  role: z.enum(Object.values(Role) as [string, ...string[]]).optional(),
 })
-const ActiveUserSchema = Yup.object().shape({
-  isActive: Yup.boolean().required("isActive is required"),
+
+const ActiveUserSchema = z.object({
+  isActive: z.boolean(),
 })
-const BlockUserSchema = Yup.object().shape({
-  isBlocked: Yup.boolean().required("isBlocked is required"),
+
+const BlockUserSchema = z.object({
+  isBlocked: z.boolean(),
 })
+
 export { userRegistrationSchema, userUpdateSchema, ActiveUserSchema, BlockUserSchema }

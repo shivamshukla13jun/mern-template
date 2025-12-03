@@ -94,7 +94,6 @@ const attemptDatabaseConnection = async () => {
     app.use('/api-docs', swaggerUi.serve);
 
     app.get('/api-docs', swaggerUi.setup(swaggerDocument));
-    app.use(Middleware.verifyHost);
     app.use(rootRouter);
     app.use(notFound)
     app.use(errorHandler as ErrorRequestHandler);

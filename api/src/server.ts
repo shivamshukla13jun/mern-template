@@ -1,25 +1,20 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import express, { ErrorRequestHandler, Express, NextFunction } from "express";
+import express, { ErrorRequestHandler, Express } from "express";
 import cors from "cors";
 import helmet from 'helmet';
-import {Middleware} from 'middlewares';
-import {  sessionMiddleware } from 'middlewares/session';
+import { sessionMiddleware } from 'middlewares/session';
 import compression from 'compression';
-import {
-  PORT, ALL_DIRECTORY_LIST, UPLOAD_BASE_DIR,
-} from 'config';
+import { PORT, ALL_DIRECTORY_LIST, UPLOAD_BASE_DIR } from 'config';
 import rootRouter from 'routes';
 import { notFound, errorHandler, AppError } from 'middlewares/error';
 import connectDB from 'config/database';
-// import rabbitMQConnection from 'config/rabbitmq';
-// import MessageQueueConsumer from 'microservices/message-queue-consumer';
 import createDefaultUsers from 'seeders';
-import bodyParser from 'body-parser';
 import { corsOptions } from 'utils/CorsOptions';
 import swaggerSpec from "services/SwaggerService/swaggerSpec";
 import swaggerUi from 'swagger-ui-express';
+import { ensureDirectoryExists } from 'libs';
 
 const app: Express = express();
 
@@ -34,22 +29,21 @@ const checkDatabaseConnection = (req: express.Request, res: express.Response, ne
   next();
 };
 
-// create directortis if not exists
-import { ensureDirectoryExists } from 'libs';
-import { runCluster } from 'utils/cluster';
+// Create directories if not exists
 ALL_DIRECTORY_LIST.forEach((dir) => {
   ensureDirectoryExists(dir);
 });
-// set default engine
+// Set default engine
 app.set('view engine', 'ejs');
 app.set('trust proxy', 1);
 
-// compression
+// Compression middleware
 app.use(compression());
 
-// enable cors-origin
+// CORS middleware
 app.use(cors(corsOptions as any));
 
+// Security middleware
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
@@ -68,60 +62,51 @@ app.use(
   })
 );
 
-// parse body
-app.use(bodyParser.json());
-// url encode to accept form-data
-app.use(bodyParser.urlencoded({ extended: true }));
+// Body parsing middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
+// Static file serving
 app.use('/uploads', express.static(UPLOAD_BASE_DIR));
 const attemptDatabaseConnection = async () => {
   try {
     await connectDB();
     isDatabaseConnected = true;
-    console.log('MongoDB connected');
+    console.log('✅ MongoDB connected successfully');
     
-    // Initialize RabbitMQ and message queue consumers
-    // await MessageQueueConsumer.startConsumers();
+    // Seed default data
+    await createDefaultUsers();
     
-    createDefaultUsers()
+    // Setup Swagger documentation
     const swaggerDocument = await swaggerSpec();
-    // Mount Swagger UI
+    
+    // Apply middleware
     app.use(checkDatabaseConnection);
-    // session middleware
     app.use(sessionMiddleware);
-
-
+    
+    // Mount Swagger UI
     app.use('/api-docs', swaggerUi.serve);
-
     app.get('/api-docs', swaggerUi.setup(swaggerDocument));
-    app.use(Middleware.verifyHost);
+    
+    // Mount routes
     app.use(rootRouter);
-    app.use(notFound)
+    
+    // Error handling
+    app.use(notFound);
     app.use(errorHandler as ErrorRequestHandler);
-    console.log(' Swagger UI is available at /api-docs');
-    // runCluster(() => {
-    //   app.listen(PORT, () => {
-    //     console.log(`Server is running on port ${PORT}`);
-    //   });
-    // }, {
-    //   workers: 0,           // 0 = use all CPU cores
-    //   restartOnExit: true,  // restart workers if they crash
-    //   onWorkerStart: (worker) => {
-    //     console.log(`Worker ${worker.process.pid} forked`);
-    //   },
-    // });
-    // Start the server only after routes are set up
+    
+    // Start server
     app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+      console.log(`🚀 Server is running on port ${PORT}`);
+      console.log(`📚 Swagger UI is available at http://localhost:${PORT}/api-docs`);
     });
-
-
   } catch (err) {
     isDatabaseConnected = false;
-    console.warn('Unable to connect to the database:', err);
-    // Attempt reconnection after 5 seconds
+    console.error('❌ Unable to connect to the database:', err);
+    console.log('🔄 Attempting reconnection in 5 seconds...');
     setTimeout(attemptDatabaseConnection, 5000);
   }
 };
+// Initialize application
 attemptDatabaseConnection();
 

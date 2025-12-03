@@ -9,7 +9,7 @@ import sendEmail from "libs/sendEmail";
 import path from "path";
 import ejs from "ejs";
 import { UserPermissionChecker } from "services/roleBaseAccessControl";
-import { RolePermissionModel } from "microservices/permission-services/RolePermission.model";
+import { RolePermissionModel } from "microservices/permission-services/rolePermission.model";
 import { rolePermissionsJSON } from "seeders/rolePermission.seed";
 
 /**
@@ -125,7 +125,7 @@ const getUserById =
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
    try {
         const { id } = req.params;
-    let user = await User.findById(id==="session"?req.session.user?._id:id).lean()
+    let user = await User.findById(id).lean()
     if(!user){
       throw new AppError("User not found", 404);
     }

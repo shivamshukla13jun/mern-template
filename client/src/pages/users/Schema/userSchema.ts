@@ -1,57 +1,80 @@
 import { IUser, Role, Roles } from '@/types';
-import * as Yup from 'yup';
+import { z } from 'zod';
 
-const permissionSchema = Yup.object().shape({
-  create: Yup.boolean().default(false).optional(),
-  delete: Yup.boolean().default(false).optional(),
-  update: Yup.boolean().default(false).optional(),
-  view: Yup.boolean().default(false).optional(),
-  import: Yup.boolean().default(false).optional(),
-  export: Yup.boolean().default(false).optional(),
+const permissionSchema = z.object({
+  create: z.boolean().default(false).optional(),
+  delete: z.boolean().default(false).optional(),
+  update: z.boolean().default(false).optional(),
+  view: z.boolean().default(false).optional(),
+  import: z.boolean().default(false).optional(),
+  export: z.boolean().default(false).optional(),
 });
 
 
-const Userschema:Yup.ObjectSchema<IUser>= Yup.object().shape({
-  _id:Yup.string().optional(),
-  isUpdate: Yup.boolean().default(false),
-  isActive: Yup.boolean().default(false),
-  isBlocked: Yup.boolean().default(false),
-  name: Yup.string()
-    .label('Full Name')
-    .required('Please enter your full name')
+const Userschema = z.object({
+  _id: z.string().optional(),
+  isUpdate: z.boolean().default(false),
+  isActive: z.boolean().default(false),
+  isBlocked: z.boolean().default(false),
+  name: z.string()
     .min(2, 'Name must be at least 2 characters long')
-    .matches(/^[a-zA-Z\s]+$/, 'Name can only contain letters and spaces'),
-  email: Yup.string()
-    .label('Email Address')
-    .email('Please enter a valid email address (e.g. user@example.com)')
-    .required('Email address is required for registration'),
-  password: Yup.string()
-    .label('Password')
-    .when('isUpdate', {
-      is: false,
-      then: (schema) => schema.required('Please create a password').min(6, 'Password must contain at least 6 characters')
-      .matches(/[A-Z]/, 'Password must contain at least one uppercase letter')
-      .matches(/[0-9]/, 'Password must contain at least one number'),
-      otherwise: (schema) => schema.optional(),
-    }),
-
-  repeatPassword: Yup.string()
-    .label('Confirm Password')
-    .when('isUpdate', {
-      is: false,
-      then: (schema) => schema.required('Please confirm your password').oneOf([Yup.ref('password')], 'Both passwords must match'),
-      otherwise: (schema) => schema.optional(),
-    }).when("password", {
-      is: (password: string) => password !== '',
-      then: (schema) => schema.required('Please confirm your password').oneOf([Yup.ref('password')], 'Both passwords must match'),
-      otherwise: (schema) => schema.optional(),
-    }),
-  role: Yup.string()
-    .label('User Role')
-    .oneOf(Roles)
-    .required('Please select a role'),
+    .regex(/^[a-zA-Z\s]+$/, 'Name can only contain letters and spaces'),
+  email: z.string()
+    .email('Please enter a valid email address (e.g. user@example.com)'),
+  password: z.string().optional(),
+  repeatPassword: z.string().optional(),
+  role: z.enum(Roles as unknown as [string, ...string[]]),
+}).superRefine((data, ctx) => {
+  // If not updating, password is required
+  if (!data.isUpdate && !data.password) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Please create a password',
+      path: ['password']
+    });
+  }
   
- 
+  // If not updating and password exists, validate it
+  if (!data.isUpdate && data.password) {
+    if (data.password.length < 6) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Password must contain at least 6 characters',
+        path: ['password']
+      });
+    }
+    if (!/[A-Z]/.test(data.password)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Password must contain at least one uppercase letter',
+        path: ['password']
+      });
+    }
+    if (!/[0-9]/.test(data.password)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Password must contain at least one number',
+        path: ['password']
+      });
+    }
+  }
+  
+  // Validate repeatPassword
+  if (!data.isUpdate && data.password && data.password !== data.repeatPassword) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Both passwords must match',
+      path: ['repeatPassword']
+    });
+  }
+  
+  if (data.password && data.password !== '' && data.password !== data.repeatPassword) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Both passwords must match',
+      path: ['repeatPassword']
+    });
+  }
 });
 
 const defaulUsertValues:IUser = {

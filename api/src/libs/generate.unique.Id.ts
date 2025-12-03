@@ -3,6 +3,8 @@ export type PrefixType = 'BAL-' | 'BILL-' | 'CUSTOMER-' | 'INVOICE-' | 'PL-' | '
 const CounterSchema = new mongoose.Schema({
     prefix: { type: String, required: true, unique: true },
     seq: { type: Number, default: 0 }
+  },{
+    collection:"counters"
   });
   const Counter = mongoose.model("counters", CounterSchema);
   

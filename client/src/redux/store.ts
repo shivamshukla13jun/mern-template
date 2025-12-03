@@ -32,20 +32,13 @@ export const store = configureStore({
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      // serializableCheck: {
-      //   // Ignore these action types
-      //   ignoredActions: ['load/setFiles', 'persist/PERSIST', FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
-      //   // Ignore these field paths in all actions
-      //   ignoredActionPaths: ['payload.files', 'meta.arg'],
-      //   // Ignore these paths in the state
-      //   ignoredPaths: ['load.files', 'editload.files'],
-      // },
-      serializableCheck:false
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
     }),
 });
 
 export const persistor = persistStore(store);
-
 
 export type RootState = ReturnType<typeof store.getState>;
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;

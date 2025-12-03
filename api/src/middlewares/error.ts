@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { JsonWebTokenError } from "jsonwebtoken";
-import { ValidationError as YupValidationError } from "yup";
-import {  MongoError } from "mongodb";
+
+import { ZodError } from "zod";
 import mongoose from "mongoose";
 import { capitalizeFirstLetter } from "libs";
 import { isProduction } from "config";
@@ -67,7 +66,7 @@ const notFound = (req: Request, res: Response, next: NextFunction) => {
 
 // Global error handler
 const errorHandler = (
-  err: Error | AppError | JsonWebTokenError | YupValidationError | MongoError | mongoose.Error.ValidationError,
+  err: Error | AppError | ZodError  | mongoose.Error.ValidationError,
   req: Request,
   res: Response,
   next: NextFunction
@@ -100,9 +99,6 @@ const errorHandler = (
     });
   }
 
-  if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
-    error = new AppError('Invalid or expired token', 401);
-  }
   if (err.message === 'Not allowed by CORS') {
     error = new AppError("You are not allowed to access this resource", 403);
   }
@@ -180,10 +176,15 @@ const errorHandler = (
     }
   }
 
-  // Handle Yup validation errors
-  if (err instanceof YupValidationError) {
-    const messages = err.errors.join(", ");
-    error = new AppError(messages, 400, err.errors as any);
+  // Handle Zod validation errors
+  if (err instanceof ZodError) {
+    const errors: Record<string, string> = {};
+    err.issues.forEach((issue) => {
+      const path = issue.path.join('.');
+      errors[path] = issue.message;
+    });
+    const messages = err.issues.map(e => e.message).join(", ");
+    error = new AppError(messages, 400, errors);
   }
 
   // Add custom error fields from request if available

@@ -6,7 +6,7 @@ import { capitalizeFirstLetter } from 'libs';
 import { AppError } from 'middlewares/error';
 import { Role } from 'microservices/auth-service/types';
 import { IUserDocument } from 'microservices/auth-service/user.model'; // Adjust path as needed
-import { IRolePermission, RolePermissionModel } from 'microservices/permission-services/RolePermission.model';
+import { IRolePermission, RolePermissionModel } from 'microservices/permission-services/rolePermission.model';
 import { ActionType, ResourceType,ParentResourceType } from 'seeders/rolePermission.seed';
 const ADMIN_ASSIGNABLE_ROLES = [Role.CUSTOMER, Role.SELLER, Role];
 const SUPERADMIN_ASSIGNABLE_ROLES = [Role.ADMIN];
@@ -104,7 +104,7 @@ export function requirePermission(method: ActionType, title: ResourceType,parent
        next();
      } catch (err: any) {
        console.error('Permission check failed:', err);
-       throw new AppError('Permission check failed', 403);
+       next(err)
      }
    };
 }

@@ -25,7 +25,7 @@ api.interceptors.request.use(
   async (config) => {
     try {
       const isEncrypted = true; // toggle encryption here
-      config.headers["isencrypted"] = String(isEncrypted);
+      // config.headers["isencrypted"] = String(isEncrypted);
 
       if (isEncrypted) {
         encryptRequest(config);

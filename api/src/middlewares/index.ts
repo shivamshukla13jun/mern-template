@@ -1,14 +1,16 @@
 import { Request, Response, NextFunction } from "express";
 import multer from 'multer';
 import path from 'path';
-import { AnySchema } from 'yup';
+import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import rateLimit from 'express-rate-limit';
 import { AppError } from 'middlewares/error';
 import { UPLOAD_BASE_DIR, isProduction } from 'config';
 import { encrypt } from "libs";
+
 export class Middleware {
     constructor() {
+        
     }
     // File filter function
     private static fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
@@ -36,18 +38,24 @@ export class Middleware {
     }
     static decryptDataMiddleware = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            if (req.headers.isencrypted == "true") {
+          const isbodyEmpty = Object.keys(req.body).length === 0;
+          const isisRequestedENcrypted = req.headers.isencrypted == "true";
+            if (!isbodyEmpty && isisRequestedENcrypted) {
+
                 if (req.method === 'POST' || req.method === 'PUT' && req.body.payload) {
                     req.body = await encrypt.decryptData(req.body.payload);
                 }
             }
+        
             next();
         } catch (error) {
             next(error);
         }
     }
+   
     static encryptResponseMiddleware(req: Request, res: Response, next: NextFunction) {
-
+      try {
+        res.locals.companyId = req.headers["companyid"] as string;
         if (req.headers.isencrypted == "true") {
             const originalJson = res.json;
             res.json = function (data) {
@@ -58,6 +66,9 @@ export class Middleware {
 
         }
         next();
+    } catch (error) {
+      next(error);
+    }
     }
     static loginLimiter = rateLimit({
         windowMs: 15 * 60 * 1000,
@@ -142,34 +153,14 @@ export class Middleware {
 
         next(error);
     };
-    static requestValidate = (schema: AnySchema) => async (req: Request, res: Response, next: NextFunction) => {
+    static requestValidate = (schema: z.ZodSchema) => async (req: Request, res: Response, next: NextFunction) => {
         try {
             console.info('Original Request Body:', req.body);
-            req.body = await schema.validate(req.body, { abortEarly: false, stripUnknown: true });
+            req.body = await schema.parseAsync(req.body);
             console.info('New Request Body:', req.body);
             next();
         } catch (err: any) {
             next(err);
-        }
-    };
-    static verifyHost = async (req: Request, res: Response, next: NextFunction) => {
-        try {
-
-            //   const configHost = process.env.API_KEY
-            //   const API_KEY=req.headers["x-api-key"]
-
-
-            // if(whitelist.some(item=>req.originalUrl.startsWith(item))){
-            //   return next();
-            // }
-            //  else  if(API_KEY !== configHost){
-            //   return next(new AppError("Unauthorized host", 403));
-            // }
-            next();
-
-        } catch (error) {
-
-            next(error);
         }
     };
 }

@@ -1,6 +1,6 @@
 // src/controllers/rolePermission.controller.ts
 import { NextFunction, Request, Response } from 'express';
-import { RolePermissionModel } from './RolePermission.model';
+import { RolePermissionModel } from './rolePermission.model';
 export const updateAccess = async (req: Request, res: Response,next:NextFunction) => {
   try {
     const { role } = req.params;

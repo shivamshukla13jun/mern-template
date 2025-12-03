@@ -50,8 +50,24 @@ class CustomMongoStore extends Store {
         .catch(callback);
     }
     // Touch session (update expiry)
-    touch(sid: string, session: session.SessionData, callback?: (err?: any) => void): void {
-      const expires = new Date(Date.now() + (sessionExpireTime)); // 15 days
+   touch(sid: string, session: session.SessionData, callback?: (err?: any) => void): void {
+      // Get current session expiry from the cookie
+      const currentExpiry = session.cookie.expires;
+      
+      if (currentExpiry) {
+        const now = Date.now();
+        const expiryTime = new Date(currentExpiry).getTime();
+        const timeRemaining = expiryTime - now;
+        const threshold = sessionExpireTime * 0.2; // Update only if less than 20% time remaining
+        
+        // Skip DB update if session still has plenty of time left
+        if (timeRemaining > threshold) {
+          return callback?.();
+        }
+      }
+      
+      // Update expiry in DB only when necessary
+      const expires = new Date(Date.now() + sessionExpireTime);
   
       Session.findByIdAndUpdate(
         sid,

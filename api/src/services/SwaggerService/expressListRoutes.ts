@@ -1,4 +1,5 @@
-import * as yup from 'yup';
+import { z } from 'zod';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 
 import { SchemaList } from './SchemaList';
 import { ParamValidationRules } from './paramParameters';
@@ -186,100 +187,38 @@ async function generateRequestBody(path: string, method: string): Promise<any> {
 }
 
 
-// First, let's define an extended type for the Yup schema description
-type ExtendedSchemaDescription = yup.SchemaFieldDescription & {
-  oneOf?: any[];
-  // Add other properties that might be missing from the default type
-};
-
- function  generatePropertiesFromYup  (
-  schema: yup.AnySchema, // input is yup.AnySchema
+function generatePropertiesFromZod(
+  schema: any,
   disabledFields: string[] = []
 ): Record<string, any> {
-  if (!schema || typeof schema.describe !== 'function') {
-    console.warn('Invalid Yup schema provided');
-    return {};
-  }
-
   try {
-    const properties: Record<string, any> = {};
+    // Convert Zod schema to JSON Schema
+    const jsonSchema = zodToJsonSchema(schema, {
+      target: 'openApi3',
+      $refStrategy: 'none'
+    } as any);
 
-    if (schema instanceof yup.ObjectSchema) {
-      const fields = (schema as yup.ObjectSchema<any, any>).fields;
-
-      for (const [key, fieldSchema] of Object.entries(fields)) {
-        if (disabledFields.includes(key)) continue;
-        
-        const fieldDesc = fieldSchema.describe()as ExtendedSchemaDescription;
-        const propSchema: any = {
-          type: fieldDesc.type,
-        };
-
-        // Handle oneOf validation (enums)
-        if (fieldDesc.oneOf && fieldDesc.oneOf.length > 0) {
-          propSchema.enum = fieldDesc.oneOf;
-          // If it's a string type with oneOf, set the type explicitly
-          if (fieldDesc.type === 'string') {
-            propSchema.type = 'string';
-          } else if (fieldDesc.type === 'number') {
-            propSchema.type = 'number';
-          }
+    // Extract properties from the JSON schema
+    if (jsonSchema && typeof jsonSchema === 'object' && 'properties' in jsonSchema) {
+      const properties = jsonSchema.properties as Record<string, any>;
+      
+      // Filter out disabled fields
+      const filteredProperties: Record<string, any> = {};
+      for (const [key, value] of Object.entries(properties)) {
+        if (!disabledFields.includes(key)) {
+          filteredProperties[key] = value;
         }
-
-        // Handle date format
-        if (fieldDesc.type === 'date') {
-          propSchema.format = 'date-time';
-        }
-
-        // Handle arrays
-        if (fieldDesc.type === 'array') {
-          const arraySchema = fieldSchema as yup.ArraySchema<any, any, any, any>;
-          const innerType = arraySchema.innerType as yup.AnySchema;
-
-          if (innerType) {
-            const innerDesc = innerType.describe();
-            
-            // Handle oneOf in array items
-            if (innerDesc.oneOf && innerDesc.oneOf.length > 0) {
-              propSchema.items = {
-                type: innerDesc.type,
-                enum: innerDesc.oneOf
-              };
-            } else if (innerDesc.type === 'object') {
-              propSchema.items = {
-                type: 'object',
-                properties: generatePropertiesFromYup(innerType, disabledFields),
-              };
-            } else if (innerDesc.type === 'array') {
-              propSchema.items = {
-                type: 'array',
-                items: generatePropertiesFromYup(innerType, disabledFields),
-              };
-            } else {
-              propSchema.items = generatePropertiesFromYup(innerType, disabledFields);
-            }
-          }
-        }
-
-        // Handle nested objects
-        if (fieldDesc.type === 'object') {
-          propSchema.type = 'object';
-          propSchema.properties = generatePropertiesFromYup(
-            fieldSchema as yup.ObjectSchema<any, any>,
-            disabledFields
-          );
-        }
-
-        properties[key] = propSchema;
       }
+      
+      return filteredProperties;
     }
 
-    return properties;
+    return {};
   } catch (error) {
-    console.error('Error generating properties from Yup schema:', error);
+    console.error('Error generating properties from Zod schema:', error);
     return {};
   }
-};
+}
 
 
 
@@ -378,6 +317,6 @@ async function generateSwaggerPaths(
 
 
 
-export {generateSwaggerPaths,getRoutesFromRouter,generatePropertiesFromYup,generateCommonProperties,generateRequestBody,cleanExpressPath,generatePathParameters};
+export {generateSwaggerPaths,getRoutesFromRouter,generatePropertiesFromZod,generateCommonProperties,generateRequestBody,cleanExpressPath,generatePathParameters};
 
-export default generatePropertiesFromYup
+export default generatePropertiesFromZod

@@ -4,7 +4,7 @@ import {
   loginUser,
   forgotPassword,
   resetPassword,
-  logout,
+  logout,currentLoginUser
 } from "./auth.controller";
 
 import { authRegistrationSchema, authLoginSchema, authPasswordResetRequestSchema, authPasswordResetSchema } from './auth.validation';
@@ -22,5 +22,5 @@ router.post("/login", Middleware.loginLimiter, validateLogin, loginUser);
 router.post("/logout", logout);
 router.post('/forget-password', Middleware.loginLimiter, validatePasswordResetRequest, forgotPassword);
 router.post('/reset-password', Middleware.loginLimiter, validatePasswordReset, resetPassword);
-
+router.get('/current-user',currentLoginUser)
 export default router;

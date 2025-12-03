@@ -1,5 +1,5 @@
 import { Role } from 'microservices/auth-service/types';
-import { IRolePermission, RolePermissionModel, IActionPermission } from 'microservices/permission-services/RolePermission.model';
+import { IRolePermission, RolePermissionModel, IActionPermission } from 'microservices/permission-services/rolePermission.model';
 
 // ──────────────
 // Seed type for role permissions JSON

@@ -1,5 +1,14 @@
 # MERN Template - Production Ready
+## 🚀 How to Use This Template
 
+1. Open this repository on GitHub
+2. Click on **Use this template** (top-right)
+
+![Use This Template](use-template.png)
+
+3. Choose **Create a new repository**
+4. Give your project a name
+5. Click **Create repository**
 A production-ready full-stack MERN (MongoDB, Express, React, Node.js) template with TypeScript, featuring clean architecture, Redis caching, role-based access control, and comprehensive documentation.
 
 ## 📚 Documentation

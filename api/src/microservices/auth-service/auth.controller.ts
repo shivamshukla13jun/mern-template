@@ -133,27 +133,36 @@ const resetPassword =
     }    
   }
 
- const logout = (req: Request, res: Response) => {
+ const logout = (req: Request, res: Response, next: NextFunction) => {
+  try {
    const sessionId = req.sessionID; // Get the current session ID
  req.session.destroy(async err => {
-    if (err) {
-      return res.status(500).json({ success: false, message: 'Logout failed' });
-    }
-
     // Explicitly remove session from MongoDB
-    try {
       const mongoStore = req.sessionStore as any;
       if (mongoStore && typeof mongoStore.destroy === 'function') {
         await mongoStore.destroy(sessionId); // Deletes from MongoDB
       }
-    } catch (cleanupErr) {
-      console.warn('Failed to clean session from MongoDB manually', cleanupErr);
-    }
-
+    
+    
     res.clearCookie('connect.sid'); // Clear cookie
     return res.status(200).json({ success: true, message: 'Logged out successfully' });
   });
+} catch (error) {
+  next(error)
+}
 };
+const currentLoginUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.session.user?._id
+    const user=await User.findById(userId)
+    if(!user){
+      throw new AppError("User not found", 400);
+    }
+    res.status(200).json({ data: user, success: true, statusCode: 200 });
+  } catch (error) {
+    next(error)
+  }
+}
 
 
-export { registerUser, loginUser, forgotPassword, resetPassword,logout };
+export { registerUser, loginUser, forgotPassword, resetPassword,logout ,currentLoginUser};

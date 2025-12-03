@@ -38,7 +38,7 @@ export const fetchCurrentUser = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const { default: apiService } = await import('@/service/apiService');
-      const response = await apiService.getUser('session');
+      const response = await apiService.currentUser();
       // Expecting the API to return the user object in response.data
       return response.data as IUser;
     } catch (err) {

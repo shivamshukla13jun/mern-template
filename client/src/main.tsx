@@ -4,7 +4,7 @@ import App from './App';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import 'recharts';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer,Zoom } from 'react-toastify';
 import {
   QueryClient,
   QueryClientProvider,
@@ -49,7 +49,17 @@ root.render(
           <ThemeProvider theme={theme}>
             <CssBaseline />
           <App />
-          <ToastContainer />
+          <ToastContainer   position="bottom-center"
+    autoClose={5000}
+    hideProgressBar
+    newestOnTop={false}
+    closeOnClick={false}
+    rtl={false}
+    pauseOnFocusLoss
+    draggable
+    pauseOnHover
+    theme="dark"
+    transition={Zoom} />
           </ThemeProvider>
           </QueryClientProvider>
         </PersistGate>

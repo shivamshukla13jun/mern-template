@@ -20,10 +20,7 @@ const Header: React.FC<HeaderProps> = ({ drawerWidth }) => {
   const navigate = useNavigate();
   const { user,themeMode} = useAppSelector((state) => state.user);
   // Fetch notifications using React Query
-  const { data , refetch: refetchNotifications } = useQuery<IUser>({
-    queryKey: ['user'],
-    queryFn: () => apiService.getUser("session").then(res => res.data),
-  });
+
   // Menu anchors
   const [notificationAnchorEl, setNotificationAnchorEl] = useState<null | HTMLElement>(null);
   const [userMenuAnchorEl, setUserMenuAnchorEl] = useState<null | HTMLElement>(null);

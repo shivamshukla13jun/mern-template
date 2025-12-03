@@ -24,6 +24,11 @@ dist-ssr
 *.sw?
 # Ignore all zip files
 *.zip
+
+# Build artifacts
+*.tsbuildinfo
+vite.config.d.ts
+
 # Environment files (containing secrets, API keys, credentials)
 pnpm-lock.yaml
 package-lock.json

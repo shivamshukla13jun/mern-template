@@ -104,7 +104,7 @@ export function requirePermission(method: ActionType, title: ResourceType,parent
        next();
      } catch (err: any) {
        console.error('Permission check failed:', err);
-       throw new AppError('Permission check failed', 403);
+       next(err)
      }
    };
 }

@@ -1,132 +1,166 @@
-# MERN Template Microservices Platform
+# MERN Template - Production Ready
 
-A full-stack application built with microservices architecture, featuring Redis caching, RabbitMQ message queuing, and a modern React frontend.
+A production-ready full-stack MERN (MongoDB, Express, React, Node.js) template with TypeScript, featuring clean architecture, Redis caching, role-based access control, and comprehensive documentation.
+
+## 📚 Documentation
+
+- **[Quick Start Guide](./QUICK_START.md)** - Get up and running in 5 minutes
+- **[Architecture Documentation](./ARCHITECTURE.md)** - Detailed architecture and design patterns
+- **[API Documentation](http://localhost:3000/api-docs)** - Interactive Swagger documentation (after starting the server)
 
 ## 🏗️ Architecture Overview
 
-This project follows a microservices architecture with the following components:
+This project follows a **clean, modular architecture** with the following stack:
 
-### Backend Services (Node.js + TypeScript)
-- **Auth Service**: User authentication, authorization, sessions
+### Backend (Node.js + TypeScript + Express)
+- **Auth Service**: JWT authentication, refresh tokens, password reset
+- **User Service**: User management with RBAC
+- **Permission Service**: Role-based access control
+- **Session Management**: Redis-backed sessions
+- **API Documentation**: Auto-generated Swagger docs
 
-### Frontend (React + TypeScript)
-- **Users**:  User Management
+### Frontend (React 19 + TypeScript + Vite)
+- **State Management**: Redux Toolkit + Redux Persist
+- **UI Framework**: Material-UI (MUI)
+- **Routing**: React Router v6 with protected routes
+- **API Integration**: Axios with interceptors
+- **Form Validation**: Zod schemas
 
 ### Infrastructure
-- **Redis**: Caching, session storage, real-time data
-- **RabbitMQ**: Message queuing, event-driven architecture
-- **MongoDB**: Primary database for all services
-- **Express.js**: RESTful API framework
+- **MongoDB**: Primary database with Mongoose ODM
+- **Redis**: Session storage and caching
+- **RabbitMQ**: Message queuing (optional, configured but not active)
 
 ## 🚀 Features
 
-### Core Features
-- ✅ User authentication and authorization
-- ✅ Email notifications and alerts
+### Authentication & Authorization
+- ✅ JWT authentication with refresh tokens
+- ✅ Role-based access control (RBAC)
+- ✅ Password reset via email
+- ✅ Session management with Redis
+- ✅ Protected routes on frontend
 
-### Technical Features
-- ✅ Microservices architecture
-- ✅ Redis caching for performance
-- ✅ RabbitMQ message queuing
-- ✅ Real-time inventory updates
-- ✅ Event-driven architecture
-- ✅ RESTful API design
+### Backend Features
+- ✅ Clean modular architecture
+- ✅ Auto-generated Swagger documentation
+- ✅ Input validation with Zod
+- ✅ Centralized error handling
+- ✅ File upload support
+- ✅ Email service (Nodemailer)
+- ✅ Logging with Winston
+- ✅ Security (Helmet, CORS, Rate limiting)
 - ✅ TypeScript for type safety
-- ✅ Responsive React frontend
-- ✅ Redux state management
+
+### Frontend Features
+- ✅ Modern React 19 with TypeScript
+- ✅ Redux Toolkit for state management
+- ✅ Encrypted state persistence (IndexedDB)
 - ✅ Material-UI components
+- ✅ Responsive design
+- ✅ Code splitting & lazy loading
+- ✅ Form validation with Zod
+- ✅ Toast notifications
+- ✅ Protected routes with RBAC
 
 ## 📋 Prerequisites
 
-Before running this project, ensure you have the following installed:
+Before running this project, ensure you have:
 
 - **Node.js** (v18 or higher)
-- **MongoDB** (v5 or higher)
-- **Redis** (v6 or higher)
-- **RabbitMQ** (v3.8 or higher)
+- **MongoDB** (v6 or higher)
+- **Redis** (v7 or higher)
 - **npm** or **yarn**
 
-## 🛠️ Installation & Setup
+**Note**: RabbitMQ is configured but optional. The application works without it.
 
-### 1. Clone the Repository
-```bash
-git clone <repository-url>
-cd menrn-template
-```
+## 🛠️ Quick Installation
 
-### 2. Backend Setup (ecom-api)
+> **For detailed setup instructions, see [QUICK_START.md](./QUICK_START.md)**
+
+### 1. Install Dependencies
 
 ```bash
+# Backend
 cd api
 npm install
-```
 
-Create environment file:
-```bash
-cp env.example .env
-```
-
-Update the `.env` file with your configuration:
-```env
-NODE_ENV=development
-PORT=3000
-MONGO_URI=mongodb://localhost:27017/mern-template
-REDIS_HOST=127.0.0.1
-REDIS_PORT=6379
-RABBITMQ_HOST=localhost
-RABBITMQ_PORT=5672
-JWT_SECRET=your-super-secret-jwt-key
-```
-
-### 3. Frontend Setup (ecom-client)
-
-```bash
+# Frontend
 cd client
 npm install
 ```
 
-### 4. Start Required Services
+### 2. Configure Environment
 
-Start MongoDB:
 ```bash
-mongod
+# Backend
+cd api
+cp .env.example .env
+# Edit .env with your configuration
+
+# Frontend
+cd client
+cp .env.example .env
+# Edit .env with your configuration
 ```
 
-Start Redis:
+### 3. Start Services
+
 ```bash
-redis-server
+# Start MongoDB (using Docker)
+docker run -d -p 27017:27017 --name mongodb mongo:latest
+
+# Start Redis (using Docker)
+docker run -d -p 6379:6379 --name redis redis:latest
 ```
 
-Start RabbitMQ:
-```bash
-rabbitmq-server
-```
+### 4. Run Applications
 
-### 5. Run the Application
-
-Start the backend:
 ```bash
+# Backend (Terminal 1)
 cd api
 npm run dev
-```
 
-Start the frontend:
-```bash
+# Frontend (Terminal 2)
 cd client
 npm run dev
 ```
 
-The application will be available at:
+### 5. Access the Application
+
 - **Frontend**: http://localhost:5174
-- **Backend API**: http://localhost:5070
-- **API Documentation**: http://localhost:5070/api-docs
+- **Backend API**: http://localhost:3000
+- **API Documentation**: http://localhost:3000/api-docs
 
-## 📚 API Documentation
+### Default Login Credentials
 
+- **Super Admin**: `superadmin@example.com` / `SuperAdmin@123`
+- **Admin**: `admin@example.com` / `Admin@123`
+- **User**: `user@example.com` / `User@123`
 
-## 🔄 Message Queue Events
+## 📚 API Endpoints
 
-The system uses RabbitMQ for event-driven communication:
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - User login
+- `POST /api/auth/refresh-token` - Refresh access token
+- `POST /api/auth/logout` - User logout
+- `POST /api/auth/forgot-password` - Request password reset
+- `POST /api/auth/reset-password` - Reset password
+
+### Users
+- `GET /api/users` - Get all users (Admin)
+- `GET /api/users/:id` - Get user by ID
+- `POST /api/users` - Create user (Admin)
+- `PUT /api/users/:id` - Update user
+- `DELETE /api/users/:id` - Delete user (Admin)
+
+### Permissions
+- `GET /api/permissions` - Get all permissions
+- `POST /api/permissions` - Create permission (Super Admin)
+- `PUT /api/permissions/:id` - Update permission
+- `DELETE /api/permissions/:id` - Delete permission
+
+**Full interactive documentation**: http://localhost:3000/api-docs
 
 ## 🗄️ Database Schema
 
@@ -136,36 +170,23 @@ The system uses RabbitMQ for event-driven communication:
   name: string;
   email: string;
   password: string;
-  role: Role;  // Changed from Role[] to Role
+  role: Role;
   isActive: boolean;
   isBlocked: boolean;
   createdBy?: Types.ObjectId;
   updatedBy?: Types.ObjectId;
   manager?: Types.ObjectId;
-  ActivePlan?: Types.ObjectId; // Maximum allowed concurrent sessions for the user
   resetPasswordToken?: string;
-  resetPasswordExpire?: Number;
-  }
+  resetPasswordExpire?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
 ```
-### Plan Collection
+
+### Session Collection (TTL - Auto Expire)
 ```typescript
 {
-  name: string;
-  description: string;
-  price: number;
-  noOfDevices: number;
-  features: string[];
-  isActive: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
-  createdBy?: Types.ObjectId;
-  updatedBy?: Types.ObjectId;
-  }
-```
-### Session Collection (TTl-Time To Live Aut Expire)
-```typescript
-{
- expires: Date;
+  expires: Date;
   session: {
     userId?: string;
     key: string;
@@ -173,36 +194,135 @@ The system uses RabbitMQ for event-driven communication:
     createdAt?: number;
     [key: string]: any;
   };
-  }
+}
+```
+
+### Role Permission Collection
+```typescript
+{
+  role: string;
+  permissions: Array<{
+    resource: string;
+    actions: string[];
+  }>;
+  createdAt: Date;
+  updatedAt: Date;
+}
 ```
 
 ## 🔧 Configuration
 
 ### Environment Variables
 
-Key environment variables for the backend:
-
+#### Backend (.env)
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `NODE_ENV` | Environment mode | `development` |
-| `PORT` | Server port | `5070` |
-| `MONGO_URI` | MongoDB connection string | `mongodb://localhost:27017/mern-template` |
+| `PORT` | Server port | `3000` |
+| `MONGO_URI` | MongoDB connection string | `mongodb://localhost:27017/ecommerce` |
+| `JWT_SECRET` | JWT secret key | - |
+| `REFRESH_TOKEN_SECRET` | Refresh token secret | - |
 | `REDIS_HOST` | Redis host | `127.0.0.1` |
 | `REDIS_PORT` | Redis port | `6379` |
-| `RABBITMQ_HOST` | RabbitMQ host | `localhost` |
-| `RABBITMQ_PORT` | RabbitMQ port | `5672` |
-### Redis Configuration
+| `FRONTEND_URL` | Frontend URL for CORS | `http://localhost:5174` |
 
-Redis is used for:
-- Session storage
-- API response caching
-- Real-time data caching
-- Rate limiting
+#### Frontend (.env)
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VITE_API_URL` | Backend API URL | `http://localhost:3000` |
+| `VITE_API_INDEX_DB_STORAGE` | Encryption key for state | - |
 
-### RabbitMQ Configuration
+**See `.env.example` files for complete configuration options.**
 
-RabbitMQ is used for:
-- Event-driven communication between services
-- Asynchronous processing
-- Notification queuing
+## 🔒 Security Features
 
+- ✅ JWT token-based authentication
+- ✅ Password hashing with bcrypt
+- ✅ Redis session management
+- ✅ CORS protection
+- ✅ Helmet security headers
+- ✅ Rate limiting
+- ✅ Input validation
+- ✅ XSS protection
+- ✅ Encrypted state storage (frontend)
+
+## 📖 Project Structure
+
+```
+mern-template/
+├── api/                          # Backend application
+│   ├── src/
+│   │   ├── config/              # Configuration files
+│   │   ├── microservices/       # Feature modules (auth, user, permissions)
+│   │   ├── middlewares/         # Express middlewares
+│   │   ├── routes/              # Route definitions
+│   │   ├── services/            # Business logic
+│   │   ├── utils/               # Utility functions
+│   │   └── server.ts            # Application entry point
+│   └── package.json
+│
+└── client/                      # Frontend application
+    ├── src/
+    │   ├── components/          # Reusable components
+    │   ├── pages/               # Page components
+    │   ├── redux/               # State management
+    │   ├── routes/              # Route configuration
+    │   ├── service/             # API services
+    │   └── main.tsx             # Application entry point
+    └── package.json
+```
+
+## 🧪 Testing
+
+```bash
+# Backend tests (when implemented)
+cd api
+npm test
+
+# Frontend tests (when implemented)
+cd client
+npm test
+```
+
+## 🚀 Deployment
+
+### Backend Deployment
+
+```bash
+cd api
+npm run build
+npm start
+```
+
+### Frontend Deployment
+
+```bash
+cd client
+npm run build
+# Serve the dist/ folder with your preferred hosting service
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License.
+
+## 🙏 Acknowledgments
+
+- Built with modern MERN stack
+- Inspired by clean architecture principles
+- Designed for scalability and maintainability
+
+---
+
+**For more detailed information:**
+- 📖 [Architecture Documentation](./ARCHITECTURE.md)
+- 🚀 [Quick Start Guide](./QUICK_START.md)
+- 📚 [API Documentation](http://localhost:3000/api-docs)

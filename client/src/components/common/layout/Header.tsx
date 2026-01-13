@@ -26,7 +26,7 @@ const Header: React.FC<HeaderProps> = ({ drawerWidth }) => {
   const [userMenuAnchorEl, setUserMenuAnchorEl] = useState<null | HTMLElement>(null);
 
   const logoutMutation = useMutation({
-    mutationFn: () => apiService.logout(),
+    mutationFn: () => apiService.AuthService.logout(),
     onSuccess: () => {
       dispatch({ type: 'LOGOUT' });
       navigate(paths.login, { replace: true });

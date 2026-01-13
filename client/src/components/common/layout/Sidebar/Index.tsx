@@ -203,7 +203,7 @@ const SideDrawer: React.FC<SideDrawerProps> = ({ drawerWidth }) => {
             component="div"
             sx={{ color: "white", fontWeight: "bold" }}
           >
-            FreightBooks
+            
           </Typography>
         )}
         <IconButton

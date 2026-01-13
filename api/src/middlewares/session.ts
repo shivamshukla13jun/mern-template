@@ -2,13 +2,12 @@
 // middlewares/session.ts
 import session from 'express-session';
 import { Request } from 'express';
-import { JWT_SECRET,isProduction } from 'config';
+import config  from 'config';
 import crypto from 'crypto';
-import Session,{ISession} from 'microservices/auth-service/session.model';
-import User, { IUserDocument } from 'microservices/auth-service/user.model';
+import Session,{ISession} from 'models/session.model';
+import User, { IUserDocument } from 'models/user.model';
 import { AppError } from './error';
 import sessionStore from 'services/Sessionstore';
-import { sessionExpireTime } from 'config';
 import mongoose from 'mongoose';
 // === Session Typing ===
 declare module 'express-session' {
@@ -24,16 +23,16 @@ declare module 'express-session' {
 
 export const sessionMiddleware = session({
   genid: () => new mongoose.Types.ObjectId().toString(), // Generate custom session ID
-  secret: JWT_SECRET,
+  secret: config.JWT_SECRET,
   resave: false,
   rolling:true,
   saveUninitialized: false,
   store: sessionStore,
   cookie: {
-    httpOnly: !isProduction,
+    httpOnly: !config.isProduction,
     // sameSite: 'strict',
-    secure: isProduction,
-    maxAge:sessionExpireTime, // 365 days in ms
+    secure: config.isProduction,
+    maxAge:config.sessionExpireTime, // 365 days in ms
   },
 });
 
@@ -67,8 +66,8 @@ export const sessionAgeMiddleware = (req: Request, res: any, next: any) => {
   if (req.session && req.session.createdAt) {
     const now = Date.now();
     const sessionAge = now - req.session.createdAt;
-    const maxAge = sessionExpireTime; // 15 days in ms
-    
+    const maxAge = config.sessionExpireTime; // 15 days in ms
+
     if (sessionAge <= maxAge) {
       // Update session timestamp
       req.session.createdAt = now;

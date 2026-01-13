@@ -5,8 +5,9 @@ import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import rateLimit from 'express-rate-limit';
 import { AppError } from 'middlewares/error';
-import { UPLOAD_BASE_DIR, isProduction } from 'config';
+
 import { encrypt } from "libs";
+import config from "config";
 
 export class Middleware {
     constructor() {
@@ -101,7 +102,7 @@ export class Middleware {
         }
     });
     // Configure multer
-    static upload = ({ destination = UPLOAD_BASE_DIR, fileSize = 5, maxFiles = 1 }: { destination: string, fileSize: number, maxFiles: number }) => {
+    static upload = ({ destination = config.UPLOAD_BASE_DIR, fileSize = 5, maxFiles = 1 }: { destination: string, fileSize: number, maxFiles: number }) => {
         return multer({
             storage: multer.diskStorage({
                 destination: (req, file, cb) => {

@@ -59,9 +59,9 @@ const UserForm: React.FC<UserFormProps> = ({
   const mutation = useMutation({
     mutationFn: (data: IUser) => {
       if (user?._id) {
-        return apiService.updateUser(user._id, data);
+        return apiService.Users.updateUser(user._id, data);
       }
-      return apiService.createUser(data);
+      return apiService.Users.createUser(data);
     },
     onSuccess: () => {
       toast.info(user?._id ? 'User updated successfully' : 'User created successfully');
@@ -78,7 +78,7 @@ const UserForm: React.FC<UserFormProps> = ({
   const { data: users = [] } = useQuery<IUser[]>({ 
     queryKey: ['users', ], 
     queryFn: async () => {
-      const response = await apiService.getUsers({ page: 1, limit: 100,});
+      const response = await apiService.Users.getUsers({ page: 1, limit: 100,});
       return response.data;
     } 
   });

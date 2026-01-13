@@ -35,7 +35,7 @@ const Login = () => {
 
     try {
       dispatch(loginStart());
-      const response = await apiService.login(data);
+      const response = await apiService.AuthService.login(data);
       navigate(nextPath ?nextPath:paths.users);
     } catch (error: any) {
       dispatch(loginFailure(error.message));
@@ -51,7 +51,7 @@ const Login = () => {
         minHeight: '100vh',
         display: 'flex',
         position: 'relative',
-        backgroundImage: `url('/banners/freight-login-bg.jpg')`, // Use the correct path to your background image
+        backgroundImage: `url('/banners/login.png')`, // Use the correct path to your background image
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         '&::before': {
@@ -71,7 +71,7 @@ const Login = () => {
             <Box 
               component="img"
               src={"/logo.png"} // Use the correct path to your logo image
-              alt="Freight Books Logo"
+              alt="Logo"
               sx={{ 
                 width: 'auto',
                 height: '80px',
@@ -79,43 +79,6 @@ const Login = () => {
               }}
             />
           </Box>
-          {/* <Typography 
-            variant="h3" 
-            sx={{ 
-              color: "#000",
-              fontWeight: 600,
-              mb: 1,
-              fontSize: '2.25rem',
-              lineHeight: 1.2
-            }}
-          >
-            Welcome back to
-          </Typography>
-          <Typography 
-            variant="h3" 
-            sx={{ 
-              color: "#000",
-              fontWeight: 600,
-              mb: 1,
-              fontSize: '2.25rem',
-              lineHeight: 1.2
-            }}
-          >
-            freight books     
-            
-          </Typography> */}
-          <Typography 
-            variant="h3" 
-            sx={{ 
-              color: "#000",
-              fontWeight: 600,
-              fontSize: '2.25rem',
-              lineHeight: 1.2
-            }}
-          >
-           Where Freight Meets Technology    
-            
-          </Typography>
       </Box>
         <Box sx={{ width: '50%', display: 'flex', justifyContent: 'center' }}>
           <Box sx={{ 

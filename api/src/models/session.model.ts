@@ -1,5 +1,5 @@
 // models/Session.ts
-import { sessionExpireTime } from 'config';
+import config from "config";
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ISession extends Document {
@@ -14,7 +14,7 @@ export interface ISession extends Document {
 }
 
 const sessionSchema = new Schema<ISession>({
-  expires: { type: Date, required: true, index: { expireAfterSeconds:sessionExpireTime} },
+  expires: { type: Date, required: true, index: { expireAfterSeconds:config.sessionExpireTime} },
   session: { type: Schema.Types.Mixed, required: true }
 }, {
   collection: 'sessions',

@@ -50,7 +50,7 @@ const ResetPassword: React.FC = () => {
         setError("Passwords do not match");
         return;
       }
-      await apiService.resetPassword(token as string, formData.password);
+      await apiService.AuthService.resetPassword(token as string, formData.password);
       toast.success('Password reset successful');
       navigate('/login');
     } catch (err: unknown) {
@@ -80,7 +80,7 @@ const ResetPassword: React.FC = () => {
       sx={{
         minHeight: '100vh',
         display: 'flex',
-        background: `url(/banners/freight-login-bg.jpg) no-repeat center center`,
+        background: `url(/banners/login.png) no-repeat center center`,
         backgroundSize: 'cover',
         position: 'relative',
       }}

@@ -1,6 +1,7 @@
 // src/redux/userLoginSlice.js
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import {  IRolePermission, Role } from '@/types';
+import apiService from '@/service/apiService';
 
 export interface IUser {
   _id: string;
@@ -37,8 +38,7 @@ export const fetchCurrentUser = createAsyncThunk(
   'user/fetchCurrentUser',
   async (_, { rejectWithValue }) => {
     try {
-      const { default: apiService } = await import('@/service/apiService');
-      const response = await apiService.currentUser();
+      const response = await apiService.AuthService.currentUser();
       // Expecting the API to return the user object in response.data
       return response.data as IUser;
     } catch (err) {

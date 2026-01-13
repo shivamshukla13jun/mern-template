@@ -33,7 +33,7 @@ const ForgetPassword: React.FC = () => {
     setIsLoading(true);
 
     try {
-      await apiService.forgetPassword(formData.email);
+      await apiService.AuthService.forgetPassword(formData.email);
       toast.success('Password reset instructions have been sent to your email');
       setFormData({ email: '' });
     } catch (err: unknown) {
@@ -55,7 +55,7 @@ const ForgetPassword: React.FC = () => {
       sx={{
         minHeight: '100vh',
         display: 'flex',
-        background: `url(/banners/freight-login-bg.jpg) no-repeat center center`,
+        background: `url(/banners/login.png) no-repeat center center`,
         backgroundSize: 'cover',
         position: 'relative',
       }}

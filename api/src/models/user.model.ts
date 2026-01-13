@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
 import bcrypt from 'bcrypt';
 import validator from 'validator';
-import {  Role, ROLES } from './types';
+import {  Role, ROLES } from '../microservices/auth-service/types';
 
 export interface IUserDocument extends Document {
   userId: string;

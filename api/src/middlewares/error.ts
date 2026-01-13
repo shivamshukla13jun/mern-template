@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
 import mongoose from "mongoose";
 import { capitalizeFirstLetter } from "libs";
-import { isProduction } from "config";
+import config from "config";
 import logger from "utils/logger";
 import fs from "fs"
 import { IFile } from "types/file";
@@ -207,7 +207,7 @@ const errorHandler = (
     success: false,
     message: (error as AppError).message,
     errors: (error as AppError).errors,
-    stack: isProduction ? undefined : err.stack,
+    stack: config.isProduction ? undefined : err.stack,
     statusCode: (error as AppError).statusCode,
   });
 };

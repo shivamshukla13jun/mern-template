@@ -1,8 +1,8 @@
 
 
 import { generatePropertiesFromZod } from './expressListRoutes'; // Fixed import
-import { AuthLoginSchema } from 'microservices/auth-service/validate';
-import { userRegistrationSchema, userUpdateSchema } from 'microservices/user-service/user.validation';
+import { AuthLoginSchema } from 'microservices/auth-service/login.validate';
+import { userRegistrationSchema, userUpdateSchema } from 'microservices/user-service/user.validate';
 const commonfieldsDisabled = ['createdAt', 'updatedAt','createdBy','updatedBy','userId','_id','files','deletedfiles'];
 type FieldType = 'loadData' | 'ItemData' | 'TaxData' | 'PaymentTermData' | 'AuthLoginData' | 'CreateuserData' | 'UpdateuserData';
 

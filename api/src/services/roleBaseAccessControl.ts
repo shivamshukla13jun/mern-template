@@ -5,7 +5,7 @@ import { Request, Response, NextFunction, Application } from 'express';
 import { capitalizeFirstLetter } from 'libs';
 import { AppError } from 'middlewares/error';
 import { Role } from 'microservices/auth-service/types';
-import { IUserDocument } from 'microservices/auth-service/user.model'; // Adjust path as needed
+import { IUserDocument } from 'models/user.model'; // Adjust path as needed
 import { IRolePermission, RolePermissionModel } from 'microservices/permission-services/rolePermission.model';
 import { ActionType, ResourceType,ParentResourceType } from 'seeders/rolePermission.seed';
 const ADMIN_ASSIGNABLE_ROLES = [Role.CUSTOMER, Role.SELLER, Role];

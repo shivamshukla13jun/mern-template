@@ -3,32 +3,7 @@ import { INotificationUpdate, IUser, LoginFormData, ITaxOption } from "@/types";
 import api from "@/utils/axiosInterceptor";
 
 const apiService = {
-  login: async (userData:LoginFormData) => {
-    const response = await api.post("/auth/login", userData);
-    return response.data;
-  },
-  logout: async () => {
-    const response = await api.post("/auth/logout");
-    return response.data;
-  }
-  ,
- 
-  register: async (userData:IUser) => {
-    const response = await api.post("/auth/register", userData);
-    return response.data;
-  },
-  forgetPassword: async (email:string) => {
-    const response = await api.post("/auth/forget-password", {email});
-    return response.data;
-  },
-  currentUser: async () => {
-    const response = await api.get("/auth/current-user");
-    return response.data;
-  },
-  resetPassword: async (token:string, password:string) => {
-    const response = await api.post("/auth/reset-password", {token, password});
-    return response.data;
-  },
+   Users:{
   // user services
   getUsers: async (params:Record<string,any>={limit:10,page:1}) => {
     const response = await api.get("/users", {params});
@@ -58,6 +33,35 @@ const apiService = {
     const response = await api.put(`/users/block/${id}`, {isBlocked});
     return response.data;
   }
+   },
+   AuthService:{
+      login: async (userData:LoginFormData) => {
+    const response = await api.post("/auth/login", userData);
+    return response.data;
+  },
+  logout: async () => {
+    const response = await api.post("/auth/logout");
+    return response.data;
+  }
+  ,
+ 
+  register: async (userData:IUser) => {
+    const response = await api.post("/auth/register", userData);
+    return response.data;
+  },
+  forgetPassword: async (email:string) => {
+    const response = await api.post("/auth/forget-password", {email});
+    return response.data;
+  },
+  currentUser: async () => {
+    const response = await api.get("/auth/current-user");
+    return response.data;
+  },
+  resetPassword: async (token:string, password:string) => {
+    const response = await api.post("/auth/reset-password", {token, password});
+    return response.data;
+  },
+   }
 };
 
 export default apiService;

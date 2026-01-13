@@ -11,7 +11,7 @@ const createDefaultData = async (): Promise<void> => {
 
     } catch (error) {
         console.error("Error initializing default data:", error);
-        process.exit(1);
+      
     }
 };
 export default createDefaultData

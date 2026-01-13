@@ -1,5 +1,6 @@
 import { createClient } from 'redis';
-import { REDIS_HOST, REDIS_PORT, REDIS_PASSWORD ,REDIS_UERNAME} from 'config';
+import config from 'config';
+const  { REDIS_HOST, REDIS_PORT, REDIS_PASSWORD ,REDIS_UERNAME}=config
 
 // Create a Redis client instance
 const redisClient = createClient({

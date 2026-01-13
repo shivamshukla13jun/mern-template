@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-import User,{IUserDocument} from "./user.model";
+import User,{IUserDocument} from "../../models/user.model";
 import { AppError } from "middlewares/error";
 import crypto from "crypto";
 import sendEmail from "libs/sendEmail";
-import { FRONTEND_URL } from "config";
+import config from "config";
 import { loginSession } from "middlewares/session";
 import ejs from "ejs";
 import path from "path";
@@ -91,7 +91,7 @@ const forgotPassword =
     await user.save();
 
     // Create reset URL
-    const resetUrl = `${FRONTEND_URL}/reset-password/${resetToken}`;
+    const resetUrl = `${config.FRONTEND_URL}/reset-password/${resetToken}`;
     const html=await ejs.renderFile(path.join(__dirname,"passwordreset.ejs"), { resetUrl });
 
     sendEmail(user.email, "Password Reset Request", html);

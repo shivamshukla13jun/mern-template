@@ -177,7 +177,7 @@ async function generateRequestBody(path: string, method: string): Promise<any> {
         [contentType]: {
           schema: {
             type: 'object',
-            properties: generateCommonProperties(path)
+            properties: (SchemaList as any)[resource]  || {}
           }
         }
       }
@@ -219,27 +219,6 @@ function generatePropertiesFromZod(
     return {};
   }
 }
-
-
-
-/** Generate common properties based on resource type */
-function generateCommonProperties(resource: string,): Record<string, any> {
-  console.log("resource",resource)
-  const commonProps: Record<string, any> = {
-    createdAt: { type: 'string', format: 'date-time' },
-    updatedAt: { type: 'string', format: 'date-time' },
-    _id: { type: 'string' }
-  };
-
-  try {
-  
-    return  (SchemaList as any)[resource]  || {}
-}catch (error) {
-    console.error('Error generating common properties for resource:', resource, error);
-    return commonProps;
-  }
-}
-
 /** Generate Swagger-compatible paths object from routes */
 async function generateSwaggerPaths(
   routes: { path: string; methods: string[] }[]
@@ -317,6 +296,6 @@ async function generateSwaggerPaths(
 
 
 
-export {generateSwaggerPaths,getRoutesFromRouter,generatePropertiesFromZod,generateCommonProperties,generateRequestBody,cleanExpressPath,generatePathParameters};
+export {generateSwaggerPaths,getRoutesFromRouter,generatePropertiesFromZod,generateRequestBody,cleanExpressPath,generatePathParameters};
 
 export default generatePropertiesFromZod

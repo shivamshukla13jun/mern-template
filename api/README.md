@@ -45,7 +45,7 @@ Both request and response bodies must be decrypted on the client side for use.
 
 ## Role-Based Access Control (RBAC)
 
-This documents the data visibility and permissions for different user roles within the FreightBooks system. The core logic is implemented in `src/utils/getServicesByCreatedBy.ts`, which dynamically constructs database queries based on the user's role.
+This documents the data visibility and permissions for different user roles within the system. The core logic is implemented in `src/utils/getServicesByCreatedBy.ts`, which dynamically constructs database queries based on the user's role.
 
 ### Data Visibility Rules by Role:
 

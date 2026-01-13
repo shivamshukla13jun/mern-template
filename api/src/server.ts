@@ -6,7 +6,7 @@ import cors from "cors";
 import helmet from 'helmet';
 import { sessionMiddleware } from 'middlewares/session';
 import compression from 'compression';
-import { PORT, ALL_DIRECTORY_LIST, UPLOAD_BASE_DIR } from 'config';
+
 import rootRouter from 'routes';
 import { notFound, errorHandler, AppError } from 'middlewares/error';
 import connectDB from 'config/database';
@@ -15,6 +15,7 @@ import { corsOptions } from 'utils/CorsOptions';
 import swaggerSpec from "services/SwaggerService/swaggerSpec";
 import swaggerUi from 'swagger-ui-express';
 import { ensureDirectoryExists } from 'libs';
+import config from 'config';
 
 const app: Express = express();
 
@@ -30,7 +31,7 @@ const checkDatabaseConnection = (req: express.Request, res: express.Response, ne
 };
 
 // Create directories if not exists
-ALL_DIRECTORY_LIST.forEach((dir) => {
+config.ALL_DIRECTORY_LIST.forEach((dir) => {
   ensureDirectoryExists(dir);
 });
 // Set default engine
@@ -67,7 +68,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Static file serving
-app.use('/uploads', express.static(UPLOAD_BASE_DIR));
+app.use('/uploads', express.static(config.UPLOAD_BASE_DIR));
 const attemptDatabaseConnection = async () => {
   try {
     await connectDB();
@@ -96,9 +97,9 @@ const attemptDatabaseConnection = async () => {
     app.use(errorHandler as ErrorRequestHandler);
     
     // Start server
-    app.listen(PORT, () => {
-      console.log(`🚀 Server is running on port ${PORT}`);
-      console.log(`📚 Swagger UI is available at http://localhost:${PORT}/api-docs`);
+    app.listen(config.PORT, () => {
+      console.log(`🚀 Server is running on port ${config.PORT}`);
+      console.log(`📚 Swagger UI is available at http://localhost:${config.PORT}/api-docs`);
     });
   } catch (err) {
     isDatabaseConnected = false;

@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { Role, ROLES } from '../types';
+import { Role, ROLES } from './types';
 
 const AuthRegisterSchema = z.object({
     name: z.string()

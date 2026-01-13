@@ -5,12 +5,9 @@ import { Router } from "express";
 import fs from "fs";
 import path from "path";
 import { Middleware } from "middlewares";
-import { isProduction } from "config";
-import os from "os"
-const used = os.totalmem() - os.freemem();
-console.log('Used RAM:', (used / 1024 / 1024 / 1024).toFixed(2), 'GB');
-console.log('Free RAM:', (os.freemem() / 1024 / 1024 / 1024).toFixed(2), 'GB');
-console.log('Total RAM:', (os.totalmem() / 1024 / 1024 / 1024).toFixed(2), 'GB');
+import config from "config";
+
+const  { isProduction }=config
 const rootRouter = Router();
 
 // apply global middleware

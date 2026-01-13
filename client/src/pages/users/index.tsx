@@ -30,7 +30,7 @@ const Users: React.FC = () => {
 
 const {isPending,data,refetch} = useQuery<IsuerResponse>({
   queryKey: ['users', currentPage, limit],
-  queryFn: () => apiService.getUsers({ page: currentPage, limit }),
+  queryFn: () => apiService.Users.getUsers({ page: currentPage, limit }),
  
 });
 
@@ -51,7 +51,7 @@ const {isPending,data,refetch} = useQuery<IsuerResponse>({
 
   const handleToggleActivate = async (user: IUser) => {
     try {
-    user?._id &&   await apiService.ActivateUser(user._id, !user.isActive);
+    user?._id &&   await apiService.Users.ActivateUser(user._id, !user.isActive);
       refetch();
     } catch (error) {
       console.warn('Error activating user:', error);

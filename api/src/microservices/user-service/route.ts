@@ -9,7 +9,7 @@ import {
 } from "./user.controller";
 
 import { requirePermission } from "services/roleBaseAccessControl";
-import { userRegistrationSchema, userUpdateSchema } from './user.validation';
+import { userRegistrationSchema, userUpdateSchema } from './user.validate';
 import { Middleware } from "middlewares";
 
 const router = Router();

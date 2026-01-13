@@ -1,5 +1,5 @@
 import { Role } from "microservices/auth-service/types";
-import User from "microservices/auth-service/user.model";
+import User from "models/user.model";
 import { Types } from "mongoose";
 export const defaultAdmin = (superAdminId:Types.ObjectId)=>{
     return {
@@ -14,7 +14,7 @@ export const defaultAdmin = (superAdminId:Types.ObjectId)=>{
 export const defaultSuperAdmin = ()=>{
     return {
         name: 'Super Admin',
-        email: 'superadmin@freightbooks.net',
+        email: 'superadmin@gmail.com',
         password: '12345678',
         role: Role.SUPERADMIN,
     }
@@ -25,7 +25,8 @@ export const defaultSuperAdmin = ()=>{
  * @returns Promise that resolves with the super admin ID
  */
 const createDefaultUsers = async (): Promise<string> => {
-    try {
+   return new Promise<string>(async (resolve, reject) => {
+     try {
         // Handle super admin
         const defaultSuperAdminData = defaultSuperAdmin();
         let superAdmin = await User.findOne({ role: Role.SUPERADMIN });
@@ -59,11 +60,12 @@ const createDefaultUsers = async (): Promise<string> => {
             admin = await User.create(adminData);
             console.info("Admin user created successfully");
         }
-        return superAdmin._id.toString();
+        resolve(superAdmin._id.toString())
      } catch (error) {
         console.error("Error in createDefaultUsers:", error);
-        throw new Error(`Failed to create default users: ${error instanceof Error ? error.message : String(error)}`);
+        reject(error);
     }
+   })
 };
 
 

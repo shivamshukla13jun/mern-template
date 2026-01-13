@@ -5,7 +5,7 @@ export const UserLogout = createAsyncThunk(
   'user/logout',
   async (_, {dispatch, rejectWithValue }) => {
     try {
-      await apiService.logout();
+      await apiService.AuthService.logout();
       dispatch(logout()); // Dispatch the logout action to clear user state
       // Optionally, you can also clear any other related state or perform additional cleanup here
       return true; // Indicate successful logout

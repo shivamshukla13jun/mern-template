@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import User from "../auth-service/user.model";
+import User from "../../models/user.model";
 import { AppError } from "middlewares/error";
 import { createRegex, parseJSON } from "libs";
 import pagination from "utils/pagination";

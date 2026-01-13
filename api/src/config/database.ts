@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
-import { MONGO_URI } from 'config';
+import config from 'config';
 const connectDB = async () => {
 return new Promise<void>((resolve, reject) => {
-    mongoose.connect(MONGO_URI as string)
+    mongoose.connect(config.MONGO_URI as string)
     .then(() => {
         console.log('MongoDB connected');
         resolve();

@@ -9,11 +9,14 @@ import ReviewQueuePage from '../pages/ReviewQueuePage';
 import VideoEditorPage from '../pages/VideoEditorPage';
 import AdminCategoriesPage from '../pages/AdminCategoriesPage';
 import AdminCollectionsPage from '../pages/AdminCollectionsPage';
+import Login from '@/pages/Auth/Login';
 
 const AnimeRouter: React.FC = () => {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/login" element={<Login />} />
+      {/* <Route path="/register" element={<Register />} /> */}
       <Route path="/shorts" element={<ShortsPage />} />
       <Route path="/category/:categoryId" element={<CategoryPage />} />
       <Route path="/playlist/:playlistId" element={<PlaylistPage />} />

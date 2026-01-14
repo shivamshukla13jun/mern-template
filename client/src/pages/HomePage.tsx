@@ -5,8 +5,10 @@ import {
   Typography,
   CircularProgress,
   Alert,
+  Button,
   useTheme,
 } from '@mui/material';
+import { PlayArrow, Info } from '@mui/icons-material';
 import Navbar from '../components/Navbar';
 import CollectionRow from '../components/CollectionRow';
 import PlaylistCard from '../components/PlaylistCard';
@@ -50,7 +52,7 @@ const HomePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [featuredContent, setFeaturedContent] = useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -78,10 +80,10 @@ const HomePage: React.FC = () => {
       }
 
       if (playlistsRes.success) {
-        setPlaylists(playlistsRes.data || []);
+        setFeaturedContent(playlistsRes.data?.playlists || []);
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to load data');
+      setError(err.message || 'Failed to load content');
     } finally {
       setLoading(false);
     }
@@ -97,16 +99,8 @@ const HomePage: React.FC = () => {
         }
       }
     } catch (err) {
-      // User not logged in, that's okay for home page
+      // User not logged in
     }
-  };
-
-  const handlePlaylistClick = (playlist: Playlist) => {
-    navigate(`/playlist/${playlist._id}`);
-  };
-
-  const handleCategoryClick = (category: Category) => {
-    navigate(`/category/${category._id}`);
   };
 
   const handleLogout = () => {
@@ -114,15 +108,15 @@ const HomePage: React.FC = () => {
     setUser(null);
   };
 
-  // Group playlists by collection
-  const getPlaylistsByCollection = (collectionId: string) => {
-    return playlists.filter(playlist => playlist.collectionId === collectionId);
+  const handleCategoryClick = (categoryId: string) => {
+    navigate(`/category/${categoryId}`);
   };
 
-  // Get featured playlists (not in any collection)
-  const getFeaturedPlaylists = () => {
-    return playlists.filter(playlist => !playlist.collectionId);
+  const handlePlaylistClick = (playlist: any) => {
+    navigate(`/playlist/${playlist._id}`);
   };
+
+  const featuredPlaylist = featuredContent[0];
 
   if (loading) {
     return (
@@ -138,211 +132,179 @@ const HomePage: React.FC = () => {
     <Box sx={{ backgroundColor: '#141414', minHeight: '100vh' }}>
       <Navbar user={user} onLogout={handleLogout} />
       
-      <Container maxWidth="xl" sx={{ pt: 4, pb: 8 }}>
-        {/* Hero Section */}
-        <Box sx={{ mb: 6, textAlign: 'center' }}>
-          <Typography
-            variant="h2"
-            component="h1"
-            sx={{
-              color: 'white',
-              fontWeight: 'bold',
-              mb: 2,
-              background: 'linear-gradient(45deg, #e50914, #ff6b6b)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-          >
-            Welcome to AnimeStream
-          </Typography>
-          <Typography
-            variant="h5"
-            sx={{
-              color: '#ccc',
-              maxWidth: 800,
-              mx: 'auto',
-            }}
-          >
-            Discover amazing anime, manga, and video content powered by AI
-          </Typography>
-        </Box>
-
-        {error && (
-          <Alert
-            severity="error"
-            sx={{ mb: 4 }}
-            action={
-              <button onClick={loadData} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>
-                Retry
-              </button>
-            }
-          >
-            {error}
-          </Alert>
-        )}
-
-        {/* Categories */}
-        {categories.length > 0 && (
-          <Box sx={{ mb: 6 }}>
-            <Typography
-              variant="h4"
-              component="h2"
-              sx={{
-                color: 'white',
-                mb: 3,
-                fontWeight: 'bold',
-              }}
-            >
-              Browse by Category
-            </Typography>
-            <Box
-              sx={{
-                display: 'flex',
-                gap: 2,
-                overflowX: 'auto',
-                pb: 2,
-                '&::-webkit-scrollbar': {
-                  height: 8,
-                },
-                '&::-webkit-scrollbar-track': {
-                  backgroundColor: '#2a2a2a',
-                  borderRadius: 4,
-                },
-                '&::-webkit-scrollbar-thumb': {
-                  backgroundColor: '#e50914',
-                  borderRadius: 4,
-                },
-              }}
-            >
-              {categories.map((category) => (
-                <Box
-                  key={category._id}
-                  onClick={() => handleCategoryClick(category)}
+      {/* Hero Section */}
+      {featuredPlaylist && (
+        <Box
+          sx={{
+            position: 'relative',
+            height: { xs: '50vh', md: '70vh' },
+            backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 100%), url(${featuredPlaylist.posterUrl || '/placeholder-hero.jpg'})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
+          <Container maxWidth="xl">
+            <Box sx={{ maxWidth: '600px' }}>
+              <Typography
+                variant="h2"
+                sx={{
+                  color: 'white',
+                  fontWeight: 'bold',
+                  mb: 2,
+                  textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+                }}
+              >
+                {featuredPlaylist.title}
+              </Typography>
+              <Typography
+                variant="h6"
+                sx={{
+                  color: '#b3b3b3',
+                  mb: 3,
+                  lineHeight: 1.4,
+                }}
+              >
+                {featuredPlaylist.description || 'Experience the best in anime and manga entertainment'}
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  startIcon={<PlayArrow />}
+                  onClick={() => handlePlaylistClick(featuredPlaylist._id)}
                   sx={{
-                    minWidth: 120,
-                    p: 2,
-                    backgroundColor: '#2a2a2a',
-                    borderRadius: 2,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    textAlign: 'center',
+                    backgroundColor: 'white',
+                    color: 'black',
+                    fontWeight: 'bold',
+                    px: 4,
+                    py: 1.5,
                     '&:hover': {
-                      backgroundColor: '#e50914',
-                      transform: 'scale(1.05)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
                     },
                   }}
                 >
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: 'white',
-                      fontWeight: 'bold',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    {category.name}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-          </Box>
-        )}
-
-        {/* Featured Playlists */}
-        {getFeaturedPlaylists().length > 0 && (
-          <Box sx={{ mb: 6 }}>
-            <Typography
-              variant="h4"
-              component="h2"
-              sx={{
-                color: 'white',
-                mb: 3,
-                fontWeight: 'bold',
-              }}
-            >
-              Featured Content
-            </Typography>
-            <Box
-              sx={{
-                display: 'flex',
-                gap: 2,
-                overflowX: 'auto',
-                pb: 2,
-                '&::-webkit-scrollbar': {
-                  height: 8,
-                },
-                '&::-webkit-scrollbar-track': {
-                  backgroundColor: '#2a2a2a',
-                  borderRadius: 4,
-                },
-                '&::-webkit-scrollbar-thumb': {
-                  backgroundColor: '#e50914',
-                  borderRadius: 4,
-                },
-              }}
-            >
-              {getFeaturedPlaylists().map((playlist) => (
-                <Box
-                  key={playlist._id}
+                  Play
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  startIcon={<Info />}
+                  onClick={() => handlePlaylistClick(featuredPlaylist._id)}
                   sx={{
-                    minWidth: 200,
-                    flexShrink: 0,
+                    borderColor: 'white',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    px: 4,
+                    py: 1.5,
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    },
                   }}
                 >
-                  <PlaylistCard
-                    playlist={playlist}
-                    onClick={() => handlePlaylistClick(playlist)}
-                  />
-                </Box>
-              ))}
+                  More Info
+                </Button>
+              </Box>
             </Box>
-          </Box>
-        )}
+          </Container>
+        </Box>
+      )}
 
-        {/* Collections */}
-        {collections.map((collection) => {
-          const collectionPlaylists = getPlaylistsByCollection(collection._id);
-          if (collectionPlaylists.length === 0) return null;
-
-          return (
-            <CollectionRow
-              key={collection._id}
-              collection={collection}
-              playlists={collectionPlaylists}
-              onPlaylistClick={handlePlaylistClick}
-            />
-          );
-        })}
-
-        {/* Empty State */}
-        {!loading && categories.length === 0 && collections.length === 0 && playlists.length === 0 && (
-          <Box
-            sx={{
-              textAlign: 'center',
-              py: 8,
-            }}
-          >
-            <Typography
-              variant="h6"
+      {/* Categories */}
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Typography
+          variant="h4"
+          sx={{
+            color: 'white',
+            fontWeight: 'bold',
+            mb: 3,
+          }}
+        >
+          Browse by Category
+        </Typography>
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 2,
+            overflowX: 'auto',
+            pb: 2,
+            '&::-webkit-scrollbar': {
+              height: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: '#2a2a2a',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: '#e50914',
+              borderRadius: '4px',
+            },
+          }}
+        >
+          {categories.map((category) => (
+            <Button
+              key={category._id}
+              variant="outlined"
+              onClick={() => handleCategoryClick(category._id)}
               sx={{
-                color: '#ccc',
-                mb: 2,
+                borderColor: 'rgba(255, 255, 255, 0.3)',
+                color: 'white',
+                borderRadius: '20px',
+                px: 3,
+                py: 1,
+                textTransform: 'none',
+                fontWeight: 'bold',
+                whiteSpace: 'nowrap',
+                '&:hover': {
+                  borderColor: '#e50914',
+                  backgroundColor: 'rgba(229, 9, 20, 0.1)',
+                },
               }}
             >
-              No content available yet
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                color: '#888',
-              }}
-            >
-              Start by creating categories, collections, and playlists to build your content library.
-            </Typography>
-          </Box>
-        )}
+              {category.name}
+            </Button>
+          ))}
+        </Box>
       </Container>
+
+      {/* Collections */}
+      <Container maxWidth="xl" sx={{ pb: 8 }}>
+        {collections
+          .sort((a, b) => {
+            // Featured collections first, then by sort order
+            if (a.isFeatured && !b.isFeatured) return -1;
+            if (!a.isFeatured && b.isFeatured) return 1;
+            return a.sortOrder - b.sortOrder;
+          })
+          .map((collection) => (
+            <Box key={collection._id} sx={{ mb: 6 }}>
+              <CollectionRow
+                collection={collection}
+                playlists={featuredContent.filter(p => p.collectionId === collection._id)}
+                onPlaylistClick={handlePlaylistClick}
+              />
+            </Box>
+          ))}
+      </Container>
+
+      {error && (
+        <Alert
+          severity="error"
+          sx={{
+            position: 'fixed',
+            bottom: 20,
+            right: 20,
+            zIndex: 1000,
+          }}
+          action={
+            <button onClick={() => setError(null)} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>
+              Dismiss
+            </button>
+          }
+        >
+          {error}
+        </Alert>
+      )}
     </Box>
   );
 };

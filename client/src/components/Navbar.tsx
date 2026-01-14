@@ -17,7 +17,7 @@ import {
   Menu as MenuIcon,
   Home,
   VideoLibrary,
-  ShortVideo,
+  VideoCall,
   Dashboard,
   AdminPanelSettings,
 } from '@mui/icons-material';
@@ -60,7 +60,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
 
   const menuItems = [
     { label: 'Home', icon: <Home />, path: '/' },
-    { label: 'Shorts', icon: <ShortVideo />, path: '/shorts' },
+    { label: 'Shorts', icon: <VideoCall />, path: '/shorts' },
     { label: 'Library', icon: <VideoLibrary />, path: '/library' },
   ];
 

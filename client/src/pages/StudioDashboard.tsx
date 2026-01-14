@@ -10,6 +10,12 @@ import {
   Alert,
   Button,
   useTheme,
+  LinearProgress,
+  Chip,
+  List,
+  ListItem,
+  ListItemText,
+  Divider,
 } from '@mui/material';
 import {
   VideoLibrary,
@@ -17,6 +23,11 @@ import {
   CheckCircle,
   HourglassEmpty,
   TrendingUp,
+  AutoAwesome,
+  RecordVoiceOver,
+  VideoSettings,
+  YouTube,
+  Refresh,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
@@ -30,6 +41,25 @@ interface VideoStats {
   approved: number;
   published: number;
   failed: number;
+}
+
+interface RecentActivity {
+  _id: string;
+  type: 'video' | 'script' | 'voice' | 'upload';
+  title: string;
+  status: string;
+  createdAt: string;
+}
+
+interface SystemStats {
+  totalVideos: number;
+  totalScripts: number;
+  totalVoices: number;
+  totalUploads: number;
+  processingCount: number;
+  failedCount: number;
+  avgProcessingTime: number;
+  successRate: number;
 }
 
 const StudioDashboard: React.FC = () => {
@@ -46,18 +76,34 @@ const StudioDashboard: React.FC = () => {
     published: 0,
     failed: 0,
   });
+  const [systemStats, setSystemStats] = useState<SystemStats>({
+    totalVideos: 0,
+    totalScripts: 0,
+    totalVoices: 0,
+    totalUploads: 0,
+    processingCount: 0,
+    failedCount: 0,
+    avgProcessingTime: 0,
+    successRate: 0,
+  });
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [user, setUser] = useState<any>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    loadStats();
+    loadDashboardData();
     loadUser();
+    // Set up auto-refresh every 30 seconds
+    const interval = setInterval(loadDashboardData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
-  const loadStats = async () => {
+  const loadDashboardData = async () => {
     try {
       setLoading(true);
       setError(null);
 
+      // Load video stats
       const [draftRes, processingRes, reviewRes, approvedRes, publishedRes, failedRes] = await Promise.all([
         apiClient.getVideos({ status: 'DRAFT_READY' }),
         apiClient.getVideos({ status: 'AI_PROCESSING' }),
@@ -69,21 +115,87 @@ const StudioDashboard: React.FC = () => {
 
       const newStats: VideoStats = {
         total: 0,
-        draft: draftRes.success ? (draftRes.data || []).length : 0,
-        processing: processingRes.success ? (processingRes.data || []).length : 0,
-        review: reviewRes.success ? (reviewRes.data || []).length : 0,
-        approved: approvedRes.success ? (approvedRes.data || []).length : 0,
-        published: publishedRes.success ? (publishedRes.data || []).length : 0,
-        failed: failedRes.success ? (failedRes.data || []).length : 0,
+        draft: draftRes.success ? (draftRes.data?.videos || []).length : 0,
+        processing: processingRes.success ? (processingRes.data?.videos || []).length : 0,
+        review: reviewRes.success ? (reviewRes.data?.videos || []).length : 0,
+        approved: approvedRes.success ? (approvedRes.data?.videos || []).length : 0,
+        published: publishedRes.success ? (publishedRes.data?.videos || []).length : 0,
+        failed: failedRes.success ? (failedRes.data?.videos || []).length : 0,
       };
 
       newStats.total = Object.values(newStats).reduce((sum, count) => sum + count, 0);
       setStats(newStats);
+
+      // Load system stats
+      const allVideosRes = await apiClient.getVideos();
+      const uploadsRes = await apiClient.getYouTubeUploads();
+      
+      if (allVideosRes.success) {
+        const allVideos = allVideosRes.data?.videos || [];
+        const totalVideos = allVideos.length;
+        const totalScripts = allVideos.filter((v: any) => v.scriptId).length;
+        const totalVoices = allVideos.filter((v: any) => v.voiceId).length;
+        const processingCount = allVideos.filter((v: any) => v.status === 'AI_PROCESSING').length;
+        const failedCount = allVideos.filter((v: any) => v.status === 'FAILED').length;
+        const successCount = allVideos.filter((v: any) => v.status === 'PUBLISHED').length;
+        const successRate = totalVideos > 0 ? (successCount / totalVideos) * 100 : 0;
+
+        setSystemStats({
+          totalVideos,
+          totalScripts,
+          totalVoices,
+          totalUploads: uploadsRes.success ? (uploadsRes.data || []).length : 0,
+          processingCount,
+          failedCount,
+          avgProcessingTime: 0, // Would need backend implementation
+          successRate,
+        });
+      }
+
+      // Load recent activity (mock data for now)
+      const activities: RecentActivity[] = [
+        {
+          _id: '1',
+          type: 'video',
+          title: 'Episode 1: Introduction',
+          status: 'COMPLETED',
+          createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+        },
+        {
+          _id: '2',
+          type: 'script',
+          title: 'Episode 2 Script',
+          status: 'GENERATING',
+          createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+        },
+        {
+          _id: '3',
+          type: 'voice',
+          title: 'Episode 1 Voice',
+          status: 'COMPLETED',
+          createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+        },
+        {
+          _id: '4',
+          type: 'upload',
+          title: 'YouTube Upload - Episode 1',
+          status: 'PROCESSING',
+          createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+        },
+      ];
+      setRecentActivity(activities);
+
     } catch (err: any) {
-      setError(err.message || 'Failed to load dashboard stats');
+      setError(err.message || 'Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadDashboardData();
+    setRefreshing(false);
   };
 
   const loadUser = async () => {
@@ -194,7 +306,7 @@ const StudioDashboard: React.FC = () => {
             severity="error"
             sx={{ mb: 4 }}
             action={
-              <button onClick={loadStats} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>
+              <button onClick={loadDashboardData} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>
                 Retry
               </button>
             }
@@ -203,18 +315,48 @@ const StudioDashboard: React.FC = () => {
           </Alert>
         )}
 
-        {/* Stats Grid */}
+        {/* Enhanced Stats Grid */}
         <Grid container spacing={3} sx={{ mb: 6 }}>
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={6} md={3}>
             <StatCard
               title="Total Videos"
-              value={stats.total}
+              value={systemStats.totalVideos}
               icon={<VideoLibrary />}
               color="#2196f3"
             />
           </Grid>
           
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard
+              title="Scripts"
+              value={systemStats.totalScripts}
+              icon={<AutoAwesome />}
+              color="#9c27b0"
+            />
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard
+              title="Voices"
+              value={systemStats.totalVoices}
+              icon={<RecordVoiceOver />}
+              color="#4caf50"
+            />
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard
+              title="YouTube Uploads"
+              value={systemStats.totalUploads}
+              icon={<YouTube />}
+              color="#ff0000"
+            />
+          </Grid>
+        </Grid>
+
+        {/* Production Pipeline Stats */}
+        <Grid container spacing={3} sx={{ mb: 6 }}>
+          <Grid item xs={12} sm={6} md={3}>
             <StatCard
               title="Draft Ready"
               value={stats.draft}
@@ -224,7 +366,7 @@ const StudioDashboard: React.FC = () => {
             />
           </Grid>
           
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={6} md={3}>
             <StatCard
               title="Processing"
               value={stats.processing}
@@ -233,7 +375,7 @@ const StudioDashboard: React.FC = () => {
             />
           </Grid>
           
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={6} md={3}>
             <StatCard
               title="In Review"
               value={stats.review}
@@ -243,20 +385,11 @@ const StudioDashboard: React.FC = () => {
             />
           </Grid>
           
-          <Grid item xs={12} sm={6} md={4}>
-            <StatCard
-              title="Approved"
-              value={stats.approved}
-              icon={<CheckCircle />}
-              color="#4caf50"
-            />
-          </Grid>
-          
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={6} md={3}>
             <StatCard
               title="Published"
               value={stats.published}
-              icon={<VideoLibrary />}
+              icon={<CheckCircle />}
               color="#e50914"
               onClick={() => navigate('/shorts')}
             />
@@ -265,17 +398,33 @@ const StudioDashboard: React.FC = () => {
 
         {/* Quick Actions */}
         <Box sx={{ mb: 6 }}>
-          <Typography
-            variant="h4"
-            component="h2"
-            sx={{
-              color: 'white',
-              mb: 3,
-              fontWeight: 'bold',
-            }}
-          >
-            Quick Actions
-          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Typography
+              variant="h4"
+              component="h2"
+              sx={{
+                color: 'white',
+                fontWeight: 'bold',
+              }}
+            >
+              Quick Actions
+            </Typography>
+            <Button
+              variant="outlined"
+              startIcon={refreshing ? <CircularProgress size={20} sx={{ color: 'white' }} /> : <Refresh />}
+              onClick={handleRefresh}
+              disabled={refreshing}
+              sx={{
+                borderColor: 'white',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                },
+              }}
+            >
+              {refreshing ? 'Refreshing...' : 'Refresh'}
+            </Button>
+          </Box>
 
           <Grid container spacing={3}>
             <Grid item xs={12} sm={6} md={3}>
@@ -338,7 +487,7 @@ const StudioDashboard: React.FC = () => {
               <Button
                 variant="outlined"
                 fullWidth
-                onClick={loadStats}
+                onClick={() => navigate('/admin/categories')}
                 sx={{
                   borderColor: 'white',
                   color: 'white',
@@ -349,11 +498,121 @@ const StudioDashboard: React.FC = () => {
                   },
                 }}
               >
-                Refresh Stats
+                Admin Panel
               </Button>
             </Grid>
           </Grid>
         </Box>
+
+        {/* Enhanced Production Overview */}
+        <Grid container spacing={3} sx={{ mb: 6 }}>
+          <Grid item xs={12} md={8}>
+            <Card sx={{ backgroundColor: '#1a1a1a', color: 'white' }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" sx={{ mb: 3, fontWeight: 'bold' }}>
+                  Production Pipeline
+                </Typography>
+                
+                {/* Pipeline Progress */}
+                <Box sx={{ mb: 3 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <Typography variant="body2" sx={{ color: '#b3b3b3' }}>
+                      Overall Progress
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#b3b3b3' }}>
+                      {systemStats.successRate.toFixed(1)}% Success Rate
+                    </Typography>
+                  </Box>
+                  <LinearProgress
+                    variant="determinate"
+                    value={systemStats.successRate}
+                    sx={{ backgroundColor: '#333', '& .MuiLinearProgress-bar': { backgroundColor: '#e50914' } }}
+                  />
+                </Box>
+
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, backgroundColor: '#0a0a0a', borderRadius: 1 }}>
+                      <Box>
+                        <Typography variant="body2" sx={{ color: '#b3b3b3' }}>Draft Ready</Typography>
+                        <Typography variant="h6" sx={{ color: '#9c27b0', fontWeight: 'bold' }}>{stats.draft}</Typography>
+                      </Box>
+                      <Pending sx={{ color: '#9c27b0' }} />
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, backgroundColor: '#0a0a0a', borderRadius: 1 }}>
+                      <Box>
+                        <Typography variant="body2" sx={{ color: '#b3b3b3' }}>In Review</Typography>
+                        <Typography variant="h6" sx={{ color: '#f4c430', fontWeight: 'bold' }}>{stats.review}</Typography>
+                      </Box>
+                      <TrendingUp sx={{ color: '#f4c430' }} />
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, backgroundColor: '#0a0a0a', borderRadius: 1 }}>
+                      <Box>
+                        <Typography variant="body2" sx={{ color: '#b3b3b3' }}>Approved</Typography>
+                        <Typography variant="h6" sx={{ color: '#4caf50', fontWeight: 'bold' }}>{stats.approved}</Typography>
+                      </Box>
+                      <CheckCircle sx={{ color: '#4caf50' }} />
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, backgroundColor: '#0a0a0a', borderRadius: 1 }}>
+                      <Box>
+                        <Typography variant="body2" sx={{ color: '#b3b3b3' }}>Published</Typography>
+                        <Typography variant="h6" sx={{ color: '#e50914', fontWeight: 'bold' }}>{stats.published}</Typography>
+                      </Box>
+                      <VideoLibrary sx={{ color: '#e50914' }} />
+                    </Box>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Card sx={{ backgroundColor: '#1a1a1a', color: 'white' }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" sx={{ mb: 3, fontWeight: 'bold' }}>
+                  System Status
+                </Typography>
+                
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="body2" sx={{ color: '#b3b3b3' }}>Processing</Typography>
+                    <Chip
+                      label={systemStats.processingCount}
+                      size="small"
+                      sx={{
+                        backgroundColor: systemStats.processingCount > 0 ? '#ff9800' : '#4caf50',
+                        color: 'white',
+                      }}
+                    />
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="body2" sx={{ color: '#b3b3b3' }}>Failed</Typography>
+                    <Chip
+                      label={systemStats.failedCount}
+                      size="small"
+                      sx={{
+                        backgroundColor: systemStats.failedCount > 0 ? '#f44336' : '#4caf50',
+                        color: 'white',
+                      }}
+                    />
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="body2" sx={{ color: '#b3b3b3' }}>Success Rate</Typography>
+                    <Typography variant="body2" sx={{ color: systemStats.successRate >= 80 ? '#4caf50' : '#ff9800', fontWeight: 'bold' }}>
+                      {systemStats.successRate.toFixed(1)}%
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
 
         {/* Recent Activity */}
         <Box>
@@ -366,69 +625,88 @@ const StudioDashboard: React.FC = () => {
               fontWeight: 'bold',
             }}
           >
-            Production Overview
+            Recent Activity
           </Typography>
 
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={8}>
               <Card sx={{ backgroundColor: '#1a1a1a', color: 'white' }}>
                 <CardContent sx={{ p: 3 }}>
-                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
-                    Workflow Status
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography>Draft Ready</Typography>
-                      <Typography sx={{ color: '#9c27b0', fontWeight: 'bold' }}>
-                        {stats.draft}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography>In Review</Typography>
-                      <Typography sx={{ color: '#f4c430', fontWeight: 'bold' }}>
-                        {stats.review}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography>Approved</Typography>
-                      <Typography sx={{ color: '#4caf50', fontWeight: 'bold' }}>
-                        {stats.approved}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography>Published</Typography>
-                      <Typography sx={{ color: '#e50914', fontWeight: 'bold' }}>
-                        {stats.published}
-                      </Typography>
-                    </Box>
-                  </Box>
+                  <List sx={{ p: 0 }}>
+                    {recentActivity.map((activity, index) => (
+                      <React.Fragment key={activity._id}>
+                        <ListItem sx={{ px: 0, py: 1 }}>
+                          <ListItemText
+                            primary={
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                {activity.type === 'video' && <VideoSettings sx={{ fontSize: 20, color: '#e50914' }} />}
+                                {activity.type === 'script' && <AutoAwesome sx={{ fontSize: 20, color: '#9c27b0' }} />}
+                                {activity.type === 'voice' && <RecordVoiceOver sx={{ fontSize: 20, color: '#4caf50' }} />}
+                                {activity.type === 'upload' && <YouTube sx={{ fontSize: 20, color: '#ff0000' }} />}
+                                <Typography variant="body1" sx={{ color: 'white', fontWeight: 'medium' }}>
+                                  {activity.title}
+                                </Typography>
+                              </Box>
+                            }
+                            secondary={
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                                <Chip
+                                  label={activity.status}
+                                  size="small"
+                                  sx={{
+                                    backgroundColor: activity.status === 'COMPLETED' ? '#4caf50' : 
+                                                     activity.status === 'GENERATING' || activity.status === 'PROCESSING' ? '#ff9800' : '#757575',
+                                    color: 'white',
+                                    fontSize: '0.7rem',
+                                  }}
+                                />
+                                <Typography variant="caption" sx={{ color: '#666' }}>
+                                  {new Date(activity.createdAt).toLocaleString()}
+                                </Typography>
+                              </Box>
+                            }
+                          />
+                        </ListItem>
+                        {index < recentActivity.length - 1 && <Divider sx={{ borderColor: '#333' }} />}
+                      </React.Fragment>
+                    ))}
+                  </List>
                 </CardContent>
               </Card>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={4}>
               <Card sx={{ backgroundColor: '#1a1a1a', color: 'white' }}>
                 <CardContent sx={{ p: 3 }}>
                   <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
-                    System Status
+                    AI Workflow Summary
                   </Typography>
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography>Processing</Typography>
-                      <Typography sx={{ color: '#ff9800', fontWeight: 'bold' }}>
-                        {stats.processing}
+                    <Box sx={{ textAlign: 'center', p: 2, backgroundColor: '#0a0a0a', borderRadius: 1 }}>
+                      <AutoAwesome sx={{ fontSize: 32, color: '#9c27b0', mb: 1 }} />
+                      <Typography variant="h6" sx={{ color: '#9c27b0', fontWeight: 'bold' }}>
+                        {systemStats.totalScripts}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#b3b3b3' }}>
+                        Scripts Generated
                       </Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography>Failed</Typography>
-                      <Typography sx={{ color: '#f44336', fontWeight: 'bold' }}>
-                        {stats.failed}
+                    <Box sx={{ textAlign: 'center', p: 2, backgroundColor: '#0a0a0a', borderRadius: 1 }}>
+                      <RecordVoiceOver sx={{ fontSize: 32, color: '#4caf50', mb: 1 }} />
+                      <Typography variant="h6" sx={{ color: '#4caf50', fontWeight: 'bold' }}>
+                        {systemStats.totalVoices}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#b3b3b3' }}>
+                        Voices Created
                       </Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography>Total Production</Typography>
-                      <Typography sx={{ color: '#2196f3', fontWeight: 'bold' }}>
-                        {stats.total}
+                    <Box sx={{ textAlign: 'center', p: 2, backgroundColor: '#0a0a0a', borderRadius: 1 }}>
+                      <VideoSettings sx={{ fontSize: 32, color: '#e50914', mb: 1 }} />
+                      <Typography variant="h6" sx={{ color: '#e50914', fontWeight: 'bold' }}>
+                        {systemStats.totalVideos}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#b3b3b3' }}>
+                        Videos Produced
                       </Typography>
                     </Box>
                   </Box>

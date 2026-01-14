@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import RouterConfig from './routes/RouterConfig';
+import AnimeRouter from './routes/AnimeRouter';
 
 const App: React.FC = () => {
   return (
@@ -10,7 +11,8 @@ const App: React.FC = () => {
         v7_relativeSplatPath: true 
       }}
     >
-      <RouterConfig />
+      <AnimeRouter />
+      {/* <RouterConfig /> */}
     </Router>
   );
 };

@@ -88,7 +88,7 @@ const Login = () => {
                 textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
               }}
             >
-              ANIME STREAM
+              {/* ANIME STREAM */}
             </Typography>
             <Typography
               variant="h5"
@@ -98,7 +98,7 @@ const Login = () => {
                 fontWeight: 300,
               }}
             >
-              Your Gateway to Anime & Manga
+              {/* Your Gateway to Anime & Manga */}
             </Typography>
             <Typography
               variant="body1"
@@ -108,13 +108,13 @@ const Login = () => {
                 lineHeight: 1.6,
               }}
             >
-              Stream thousands of anime episodes and manga chapters. 
-              Create AI-generated content, manage playlists, and more.
+              {/* Stream thousands of anime episodes and manga chapters. 
+              Create AI-generated content, manage playlists, and more. */}
             </Typography>
           </Box>
           
           <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
-            {['Trending', 'New Releases', 'Popular'].map((item) => (
+            {/* {['Trending', 'New Releases', 'Popular'].map((item) => (
               <Box
                 key={item}
                 sx={{
@@ -129,7 +129,7 @@ const Login = () => {
                   {item}
                 </Typography>
               </Box>
-            ))}
+            ))} */}
           </Box>
         </Box>
 

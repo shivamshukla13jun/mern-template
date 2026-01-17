@@ -1,5 +1,19 @@
 import { useState } from 'react';
-import { Box, Button, Container, TextField, Typography, Checkbox, FormControlLabel, Stack, } from '@mui/material';
+import { 
+  Box, 
+  Button, 
+  Container, 
+  TextField, 
+  Typography, 
+  Checkbox, 
+  FormControlLabel, 
+  Stack,
+  Paper,
+  IconButton,
+  InputAdornment,
+  Alert,
+  CircularProgress
+} from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useDispatch } from 'react-redux';
@@ -13,13 +27,16 @@ import { useAppSelector } from '@/redux/store';
 import { SelectUser } from '@/redux/selectors';
 import { useAuth } from '@/hooks/ProtectedRoute/authUtils';
 import { useQueryClient } from '@tanstack/react-query';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+
 const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const q=useQueryClient()
-  const { loading,error } = useAppSelector(SelectUser);
+  const q = useQueryClient();
+  const { loading, error } = useAppSelector(SelectUser);
   
   const {
     register,
@@ -29,19 +46,19 @@ const Login = () => {
     resolver: zodResolver(loginSchema),
     defaultValues: defaultLoginValues,
   });
-  const onSubmit = async (data: any) => {
 
-   const nextPath=searchParams.get("next")
+  const onSubmit = async (data: any) => {
+    const nextPath = searchParams.get("next");
 
     try {
       dispatch(loginStart());
       const response = await apiService.AuthService.login(data);
-      navigate(nextPath ?nextPath:paths.users);
+      dispatch(loginSuccess(response.data));
+      navigate(nextPath ? nextPath : '/');
     } catch (error: any) {
       dispatch(loginFailure(error.message));
-    }finally {
-      // Any final actions can be performed here
-      q.invalidateQueries({queryKey:['fetchUser']})
+    } finally {
+      q.invalidateQueries({ queryKey: ['fetchUser'] });
     }
   };
 
@@ -51,69 +68,189 @@ const Login = () => {
         minHeight: '100vh',
         display: 'flex',
         position: 'relative',
-        backgroundImage: `url('/banners/login.png')`, // Use the correct path to your background image
+        backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('/anime-bg.jpg')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          clipPath: 'polygon(0 0, 55% 0, 65% 100%, 0% 100%)'
-        }
+        backgroundColor: '#141414',
       }}
     >
-      <Container maxWidth="lg" sx={{ display: 'flex', alignItems: 'center' }}>
-      <Box sx={{ width: '50%', position: 'relative', zIndex: 2, pl: 4 ,textAlign:"center"}}>
-          <Box sx={{ mb: 2 }}>
-            <Box 
-              component="img"
-              src={"/logo.png"} // Use the correct path to your logo image
-              alt="Logo"
-              sx={{ 
-                width: 'auto',
-                height: '80px',
-                mb: 1
+      <Container maxWidth="lg" sx={{ display: 'flex', alignItems: 'center', minHeight: '100vh' }}>
+        {/* Left Side - Branding */}
+        <Box sx={{ width: { xs: '0%', md: '50%' }, position: 'relative', zIndex: 2, pl: 4, display: { xs: 'none', md: 'block' } }}>
+          <Box sx={{ mb: 4 }}>
+            <Typography
+              variant="h2"
+              sx={{
+                color: '#e50914',
+                fontWeight: 'bold',
+                mb: 2,
+                fontSize: '3.5rem',
+                textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
               }}
-            />
+            >
+              {/* ANIME STREAM */}
+            </Typography>
+            <Typography
+              variant="h5"
+              sx={{
+                color: 'white',
+                mb: 2,
+                fontWeight: 300,
+              }}
+            >
+              {/* Your Gateway to Anime & Manga */}
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                color: '#b3b3b3',
+                maxWidth: '400px',
+                lineHeight: 1.6,
+              }}
+            >
+              {/* Stream thousands of anime episodes and manga chapters. 
+              Create AI-generated content, manage playlists, and more. */}
+            </Typography>
           </Box>
-      </Box>
-        <Box sx={{ width: '50%', display: 'flex', justifyContent: 'center' }}>
-          <Box sx={{ 
-            width: '100%', 
-            maxWidth: 400,
-            bgcolor: 'white',
-            borderRadius: 2,
-            p: 4,
-          }}>
-            <Typography variant="h5" sx={{ textAlign: 'center', fontWeight: 600, mb: 1 }}>
-              Sign In
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mb: 3 }}>
-              Enter your email and password to access your account
-            </Typography>
+          
+          <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
+            {/* {['Trending', 'New Releases', 'Popular'].map((item) => (
+              <Box
+                key={item}
+                sx={{
+                  backgroundColor: 'rgba(229, 9, 20, 0.2)',
+                  border: '1px solid #e50914',
+                  borderRadius: 1,
+                  px: 2,
+                  py: 1,
+                }}
+              >
+                <Typography variant="body2" sx={{ color: '#e50914', fontWeight: 'bold' }}>
+                  {item}
+                </Typography>
+              </Box>
+            ))} */}
+          </Box>
+        </Box>
+
+        {/* Right Side - Login Form */}
+        <Box sx={{ width: { xs: '100%', md: '50%' }, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <Paper
+            elevation={24}
+            sx={{
+              width: '100%',
+              maxWidth: 450,
+              backgroundColor: 'rgba(20, 20, 20, 0.95)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: 2,
+              p: 4,
+            }}
+          >
+            <Box sx={{ textAlign: 'center', mb: 4 }}>
+              <Typography
+                variant="h4"
+                sx={{
+                  color: 'white',
+                  fontWeight: 'bold',
+                  mb: 1,
+                }}
+              >
+                Sign In
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: '#b3b3b3',
+                }}
+              >
+                Access your anime streaming dashboard
+              </Typography>
+            </Box>
+
+            {error && (
+              <Alert severity="error" sx={{ mb: 3 }}>
+                {error}
+              </Alert>
+            )}
 
             <form onSubmit={handleSubmit(onSubmit)}>
               <TextField
                 fullWidth
-                placeholder="Email Address *"
+                label="Email Address"
                 {...register('email')}
                 error={!!errors.email}
                 helperText={errors.email?.message as string}
-                sx={{ mb: 2 }}
+                sx={{
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: 'rgba(255, 255, 255, 0.3)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(255, 255, 255, 0.5)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#e50914',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: '#b3b3b3',
+                    '&.Mui-focused': {
+                      color: '#e50914',
+                    },
+                  },
+                  '& .MuiInputBase-input': {
+                    color: 'white',
+                  },
+                }}
               />
+              
               <TextField
                 fullWidth
-                type="password"
-                placeholder="Password *"
+                label="Password"
+                type={showPassword ? 'text' : 'password'}
                 {...register('password')}
                 error={!!errors.password}
                 helperText={errors.password?.message as string}
-                sx={{ mb: 2 }}
+                sx={{
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: 'rgba(255, 255, 255, 0.3)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(255, 255, 255, 0.5)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#e50914',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: '#b3b3b3',
+                    '&.Mui-focused': {
+                      color: '#e50914',
+                    },
+                  },
+                  '& .MuiInputBase-input': {
+                    color: 'white',
+                  },
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                        sx={{ color: '#b3b3b3' }}
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
               />
-              {error && <Box sx={{color:"red"}}>{error}</Box>}
+
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <FormControlLabel
                   control={
@@ -121,21 +258,23 @@ const Login = () => {
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
                       sx={{ 
-                        color: '#DF5727',
+                        color: '#b3b3b3',
                         '&.Mui-checked': {
-                          color: '#DF5727',
+                          color: '#e50914',
                         },
                       }}
                     />
                   }
                   label="Remember me"
+                  sx={{ color: '#b3b3b3' }}
                 />
                 <Link 
                   to={paths.forgetpassword}
                   style={{ 
-                    color: '#DF5727',
+                    color: '#e50914',
                     textDecoration: 'none',
-                    fontSize: '0.875rem'
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
                   }}
                 >
                   Forgot password?
@@ -149,15 +288,38 @@ const Login = () => {
                 disabled={loading}
                 sx={{
                   py: 1.5,
-                  bgcolor: '#DF5727',
+                  backgroundColor: '#e50914',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  fontSize: '1rem',
                   '&:hover': {
-                    bgcolor: '#c94d22'
+                    backgroundColor: '#f40612',
                   },
-                  mb: 3
+                  '&:disabled': {
+                    backgroundColor: 'rgba(229, 9, 20, 0.5)',
+                  },
+                  mb: 3,
                 }}
+                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
               >
-                Access Securely
+                {loading ? 'Signing In...' : 'Sign In'}
               </Button>
+
+              <Box sx={{ textAlign: 'center', mb: 3 }}>
+                <Typography variant="body2" sx={{ color: '#b3b3b3', mb: 1 }}>
+                  Don't have an account?
+                </Typography>
+                <Link
+                  to="/register"
+                  style={{
+                    color: '#e50914',
+                    textDecoration: 'none',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  Sign up now
+                </Link>
+              </Box>
 
               <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3 }}>
                 {['Terms', 'Privacy', 'Support'].map((item) => (
@@ -167,7 +329,7 @@ const Login = () => {
                     style={{ 
                       color: '#666',
                       textDecoration: 'none',
-                      fontSize: '0.75rem'
+                      fontSize: '0.75rem',
                     }}
                   >
                     {item}
@@ -175,7 +337,7 @@ const Login = () => {
                 ))}
               </Box>
             </form>
-          </Box>
+          </Paper>
         </Box>
       </Container>
     </Box>

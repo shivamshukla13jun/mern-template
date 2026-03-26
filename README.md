@@ -28,12 +28,6 @@ This project follows a **clean, modular architecture** with the following stack:
 - **Session Management**: Redis-backed sessions
 - **API Documentation**: Auto-generated Swagger docs
 
-### Frontend (React 19 + TypeScript + Vite)
-- **State Management**: Redux Toolkit + Redux Persist
-- **UI Framework**: Material-UI (MUI)
-- **Routing**: React Router v6 with protected routes
-- **API Integration**: Axios with interceptors
-- **Form Validation**: Zod schemas
 
 ### Infrastructure
 - **MongoDB**: Primary database with Mongoose ODM
@@ -46,9 +40,6 @@ This project follows a **clean, modular architecture** with the following stack:
 - ✅ JWT authentication with refresh tokens
 - ✅ Role-based access control (RBAC)
 - ✅ Password reset via email
-- ✅ Session management with Redis
-- ✅ Protected routes on frontend
-
 ### Backend Features
 - ✅ Clean modular architecture
 - ✅ Auto-generated Swagger documentation
@@ -59,17 +50,6 @@ This project follows a **clean, modular architecture** with the following stack:
 - ✅ Logging with Winston
 - ✅ Security (Helmet, CORS, Rate limiting)
 - ✅ TypeScript for type safety
-
-### Frontend Features
-- ✅ Modern React 19 with TypeScript
-- ✅ Redux Toolkit for state management
-- ✅ Encrypted state persistence (IndexedDB)
-- ✅ Material-UI components
-- ✅ Responsive design
-- ✅ Code splitting & lazy loading
-- ✅ Form validation with Zod
-- ✅ Toast notifications
-- ✅ Protected routes with RBAC
 
 ## 📋 Prerequisites
 
@@ -89,30 +69,19 @@ Before running this project, ensure you have:
 ### 1. Install Dependencies
 
 ```bash
-# Backend
-cd api
-npm install
 
-# Frontend
-cd client
-npm install
-```
 
-### 2. Configure Environment
+### 1. Configure Environment
 
 ```bash
 # Backend
-cd api
+npm i
 cp .env.example .env
 # Edit .env with your configuration
 
-# Frontend
-cd client
-cp .env.example .env
-# Edit .env with your configuration
 ```
 
-### 3. Start Services
+### 2. Start Services
 
 ```bash
 # Start MongoDB (using Docker)
@@ -122,21 +91,16 @@ docker run -d -p 27017:27017 --name mongodb mongo:latest
 docker run -d -p 6379:6379 --name redis redis:latest
 ```
 
-### 4. Run Applications
+### 3. Run Applications
 
 ```bash
 # Backend (Terminal 1)
-cd api
 npm run dev
 
-# Frontend (Terminal 2)
-cd client
-npm run dev
 ```
 
-### 5. Access the Application
+### 4. Access the Application
 
-- **Frontend**: http://localhost:5174
 - **Backend API**: http://localhost:3000
 - **API Documentation**: http://localhost:3000/api-docs
 
@@ -163,11 +127,6 @@ npm run dev
 - `PUT /api/users/:id` - Update user
 - `DELETE /api/users/:id` - Delete user (Admin)
 
-### Permissions
-- `GET /api/permissions` - Get all permissions
-- `POST /api/permissions` - Create permission (Super Admin)
-- `PUT /api/permissions/:id` - Update permission
-- `DELETE /api/permissions/:id` - Delete permission
 
 **Full interactive documentation**: http://localhost:3000/api-docs
 
@@ -184,36 +143,8 @@ npm run dev
   isBlocked: boolean;
   createdBy?: Types.ObjectId;
   updatedBy?: Types.ObjectId;
-  manager?: Types.ObjectId;
   resetPasswordToken?: string;
   resetPasswordExpire?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-}
-```
-
-### Session Collection (TTL - Auto Expire)
-```typescript
-{
-  expires: Date;
-  session: {
-    userId?: string;
-    key: string;
-    iv: string;
-    createdAt?: number;
-    [key: string]: any;
-  };
-}
-```
-
-### Role Permission Collection
-```typescript
-{
-  role: string;
-  permissions: Array<{
-    resource: string;
-    actions: string[];
-  }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -228,18 +159,12 @@ npm run dev
 |----------|-------------|---------|
 | `NODE_ENV` | Environment mode | `development` |
 | `PORT` | Server port | `3000` |
-| `MONGO_URI` | MongoDB connection string | `mongodb://localhost:27017/ecommerce` |
+| `MONGO_URI` | MongoDB connection string | `mongodb://localhost:27017/your_db` |
 | `JWT_SECRET` | JWT secret key | - |
 | `REFRESH_TOKEN_SECRET` | Refresh token secret | - |
 | `REDIS_HOST` | Redis host | `127.0.0.1` |
 | `REDIS_PORT` | Redis port | `6379` |
-| `FRONTEND_URL` | Frontend URL for CORS | `http://localhost:5174` |
 
-#### Frontend (.env)
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `VITE_API_URL` | Backend API URL | `http://localhost:3000` |
-| `VITE_API_INDEX_DB_STORAGE` | Encryption key for state | - |
 
 **See `.env.example` files for complete configuration options.**
 
@@ -255,83 +180,4 @@ npm run dev
 - ✅ XSS protection
 - ✅ Encrypted state storage (frontend)
 
-## 📖 Project Structure
 
-```
-mern-template/
-├── api/                          # Backend application
-│   ├── src/
-│   │   ├── config/              # Configuration files
-│   │   ├── microservices/       # Feature modules (auth, user, permissions)
-│   │   ├── middlewares/         # Express middlewares
-│   │   ├── routes/              # Route definitions
-│   │   ├── services/            # Business logic
-│   │   ├── utils/               # Utility functions
-│   │   └── server.ts            # Application entry point
-│   └── package.json
-│
-└── client/                      # Frontend application
-    ├── src/
-    │   ├── components/          # Reusable components
-    │   ├── pages/               # Page components
-    │   ├── redux/               # State management
-    │   ├── routes/              # Route configuration
-    │   ├── service/             # API services
-    │   └── main.tsx             # Application entry point
-    └── package.json
-```
-
-## 🧪 Testing
-
-```bash
-# Backend tests (when implemented)
-cd api
-npm test
-
-# Frontend tests (when implemented)
-cd client
-npm test
-```
-
-## 🚀 Deployment
-
-### Backend Deployment
-
-```bash
-cd api
-npm run build
-npm start
-```
-
-### Frontend Deployment
-
-```bash
-cd client
-npm run build
-# Serve the dist/ folder with your preferred hosting service
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License.
-
-## 🙏 Acknowledgments
-
-- Built with modern MERN stack
-- Inspired by clean architecture principles
-- Designed for scalability and maintainability
-
----
-
-**For more detailed information:**
-- 📖 [Architecture Documentation](./ARCHITECTURE.md)
-- 🚀 [Quick Start Guide](./QUICK_START.md)
-- 📚 [API Documentation](http://localhost:3000/api-docs)

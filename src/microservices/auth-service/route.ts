@@ -4,7 +4,9 @@ import {
   loginUser,
   forgotPassword,
   resetPassword,
-  logout,currentLoginUser
+  logout,
+  currentLoginUser,
+  refreshAccessToken
 } from "./auth.controller";
 
 import { authRegistrationSchema, authLoginSchema, authPasswordResetRequestSchema, authPasswordResetSchema } from './auth.validation';
@@ -20,6 +22,7 @@ const validatePasswordReset = Middleware.requestValidate(authPasswordResetSchema
 router.post("/register", validateRegistration, registerUser);
 router.post("/login", Middleware.loginLimiter, validateLogin, loginUser);
 router.post("/logout",Middleware.verifyToken, logout);
+router.post('/refresh-token', refreshAccessToken);
 router.post('/forget-password', Middleware.loginLimiter, validatePasswordResetRequest, forgotPassword);
 router.post('/reset-password', Middleware.loginLimiter, validatePasswordReset, resetPassword);
 router.get('/current-user',Middleware.verifyToken, currentLoginUser)

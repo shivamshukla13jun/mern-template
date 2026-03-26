@@ -6,7 +6,7 @@ import sendEmail from "libs/sendEmail";
 import config from "config";
 import ejs from "ejs";
 import path from "path";
-import { generateAccessToken, generateRefreshToken, saveTokenToDatabase, getTokenExpirationSeconds, revokeToken } from "libs/jwt";
+import { generateAccessToken, generateRefreshToken, saveTokenToDatabase, getTokenExpirationSeconds, revokeToken, verifyToken } from "libs/jwt";
 
 /**
  * @description Create New User
@@ -180,5 +180,68 @@ const currentLoginUser = async (req: Request, res: Response, next: NextFunction)
   }
 }
 
+/**
+ * @description Refresh Access Token
+ * @type POST 
+ * @path /api/auth/refresh-token
+ */
+const refreshAccessToken = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { refreshToken } = req.body;
 
-export { registerUser, loginUser, forgotPassword, resetPassword,logout ,currentLoginUser};
+    if (!refreshToken) {
+      throw new AppError("Refresh token is required", 400);
+    }
+
+    // Verify refresh token signature
+    const decoded = verifyToken(refreshToken, true);
+
+    // Find user
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      throw new AppError("User not found", 401);
+    }
+
+    // Generate new access token
+    const tokenPayload = {
+      userId: user._id.toString(),
+      email: user.email,
+      role: user.role,
+    };
+
+    const newAccessToken = generateAccessToken(tokenPayload);
+    const accessTokenExpiry = getTokenExpirationSeconds('access');
+
+    // Save new access token to database
+    await saveTokenToDatabase(user._id, newAccessToken, 'access', accessTokenExpiry);
+
+    // Optionally: Rotate refresh token (revoke old one and create new one)
+    // Uncomment below to enable refresh token rotation
+    // await revokeToken(refreshToken);
+    // const newRefreshToken = generateRefreshToken(tokenPayload);
+    // const refreshTokenExpiry = getTokenExpirationSeconds('refresh');
+    // await saveTokenToDatabase(user._id, newRefreshToken, 'refresh', refreshTokenExpiry);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        accessToken: newAccessToken,
+        expiresIn: accessTokenExpiry,
+        // Include new refresh token if rotation is enabled:
+        // refreshToken: newRefreshToken,
+        // refreshExpiresIn: refreshTokenExpiry,
+      },
+      message: "Token refreshed successfully",
+    });
+  } catch (error: any) {
+    if (error.name === 'TokenExpiredError') {
+      next(new AppError("Refresh token has expired. Please login again", 401));
+    } else if (error.name === 'JsonWebTokenError') {
+      next(new AppError("Invalid refresh token", 401));
+    } else {
+      next(error);
+    }
+  }
+};
+
+export { registerUser, loginUser, forgotPassword, resetPassword, logout, currentLoginUser, refreshAccessToken };

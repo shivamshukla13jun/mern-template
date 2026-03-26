@@ -168,16 +168,207 @@ npm run dev
 
 **See `.env.example` files for complete configuration options.**
 
-## 🔒 Security Features
+## 🔐 JWT Authentication Guidelines
 
-- ✅ JWT token-based authentication
-- ✅ Password hashing with bcrypt
-- ✅ Redis session management
-- ✅ CORS protection
-- ✅ Helmet security headers
-- ✅ Rate limiting
-- ✅ Input validation
-- ✅ XSS protection
-- ✅ Encrypted state storage (frontend)
+### Overview
+This application uses **JWT (JSON Web Token)** authentication with the following features:
+- Standalone JWT tokens (not session-based)
+- Automatic token expiration with MongoDB TTL indexes
+- Token refresh mechanism for long-lived sessions
+- Token revocation on logout
+
+### Token Types
+
+| Token Type | Lifetime | Purpose | Storage |
+|-----------|----------|---------|---------|
+| Access Token | 1 hour (configurable) | Authorize API requests | Client-side |
+| Refresh Token | 7 days | Generate new access tokens | Client-side |
+
+### Authentication Flow
+
+#### 1. **Login** - Get Both Tokens
+```bash
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "user": { "_id": "...", "email": "...", "role": "..." },
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expiresIn": 3600
+  },
+  "message": "Login successful"
+}
+```
+
+#### 2. **Use Access Token** - Call Protected APIs
+```bash
+GET /api/auth/current-user
+Authorization: Bearer <accessToken>
+```
+
+#### 3. **Refresh Token** - When Access Token Expires
+```bash
+POST /api/auth/refresh-token
+Content-Type: application/json
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expiresIn": 3600
+  },
+  "message": "Token refreshed successfully"
+}
+```
+
+#### 4. **Logout** - Revoke Token
+```bash
+POST /api/auth/logout
+Authorization: Bearer <accessToken>
+```
+
+### Backend Implementation
+
+#### Key Files
+- **JWT Utilities**: `src/libs/jwt.ts` - Token generation, verification, and management
+- **Token Model**: `src/models/token.model.ts` - MongoDB token storage with TTL
+- **Auth Controller**: `src/microservices/auth-service/auth.controller.ts` - Login, refresh, logout
+- **Auth Middleware**: `src/middlewares/index.ts` - Middleware.verifyToken() for protected routes
+
+#### Using Protected Routes
+```typescript
+// Import middleware
+import { Middleware } from 'middlewares';
+
+// Apply to routes
+router.get('/protected-route', Middleware.verifyToken, controllerFunction);
+```
+
+The middleware will:
+1. Extract token from `Authorization: Bearer <token>` header
+2. Validate JWT signature
+3. Check token exists in database (not revoked)
+4. Load user and attach to `req.user`
+
+### Frontend Implementation (Example with React)
+
+```javascript
+// 1. Login
+const login = async (email, password) => {
+  const res = await fetch('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password })
+  });
+  const data = await res.json();
+  
+  localStorage.setItem('accessToken', data.data.accessToken);
+  localStorage.setItem('refreshToken', data.data.refreshToken);
+};
+
+// 2. Make API calls with token
+const apiCall = async (url) => {
+  const token = localStorage.getItem('accessToken');
+  const res = await fetch(url, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  
+  // If 401, refresh token
+  if (res.status === 401) {
+    await refreshAccessToken();
+    return apiCall(url); // Retry
+  }
+  return res.json();
+};
+
+// 3. Refresh token
+const refreshAccessToken = async () => {
+  const refreshToken = localStorage.getItem('refreshToken');
+  const res = await fetch('/api/auth/refresh-token', {
+    method: 'POST',
+    body: JSON.stringify({ refreshToken })
+  });
+  
+  const data = await res.json();
+  localStorage.setItem('accessToken', data.data.accessToken);
+};
+
+// 4. Logout
+const logout = async () => {
+  const token = localStorage.getItem('accessToken');
+  await fetch('/api/auth/logout', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+};
+```
+
+### Environment Configuration
+
+**Required in `.env` file:**
+```bash
+JWT_SECRET=your-super-secret-key-change-this
+REFRESH_TOKEN_SECRET=your-refresh-secret-key-change-this
+JWT_EXPIRE=1h  # Can be: '1h', '2h', '30m', '3600' (seconds)
+```
+
+### Security Best Practices
+
+✅ **Do**:
+- Store tokens in `localStorage` or secure `httpOnly` cookies
+- Include token in `Authorization: Bearer <token>` header
+- Implement token refresh logic before expiration
+- Clear tokens on logout
+- Handle token expiration gracefully
+- Use HTTPS in production
+
+❌ **Don't**:
+- Store tokens in plain text in HTML
+- Log tokens to console in production
+- Commit JWT secrets to git
+- Use weak secrets (use strong random strings)
+- Store tokens in `sessionStorage` (clears on tab close)
+
+### Database TTL Management
+
+Tokens are automatically deleted from MongoDB after expiration via TTL indexes. No manual cleanup needed.
+
+**Manual cleanup (optional):**
+```javascript
+// Delete all expired tokens
+db.tokens.deleteMany({ expiresAt: { $lt: new Date() } })
+```
+
+### Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| "Token has expired" | Call refresh-token endpoint with refreshToken |
+| "Invalid token" | Check token is not corrupted, includes `Bearer ` prefix |
+| "Token not found in database" | Token was revoked or automatically deleted by TTL |
+| "User not found" | User account may have been deleted |
+| 401 on protected routes | Token missing or expired; login again if refreshToken also expired |
+
+
 
 

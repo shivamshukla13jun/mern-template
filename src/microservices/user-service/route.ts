@@ -18,7 +18,7 @@ const router = Router();
 // Validation middleware using Yup
 const validateUserRegistration = Middleware.requestValidate(userRegistrationSchema);
 const validateUserUpdate = Middleware.requestValidate(userUpdateSchema);
-
+router.use(Middleware.verifyToken); // Apply authentication middleware to all routes in this router
 router.route("/")
 .get( requireRole([Role.ADMIN,Role.SUPERADMIN]), getAllUsers)
 .post( requireRole([Role.ADMIN,Role.SUPERADMIN]), validateUserRegistration, createUser);

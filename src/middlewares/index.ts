@@ -5,37 +5,68 @@ import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import rateLimit from 'express-rate-limit';
 import { AppError } from 'middlewares/error';
-
+import { verifyToken, verifyTokenInDatabase } from 'libs/jwt';
+import User, { IUserDocument } from 'models/user.model';
+declare global {
+  namespace Express {
+    interface Request {
+      user: IUserDocument;
+    }
+  }
+}
+const mimeTypeMap: { [key: string]: string[] } = {
+    image: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'],
+    video: ['video/mp4', 'video/mpeg', 'video/quicktime', 'video/x-msvideo', 'video/webm'],
+    document: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain'],
+    audio: ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/webm', 'audio/aac']
+};
 
 export class Middleware {
     constructor() {
-        
-    }
-    // File filter function
-    private static fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-        // Check file type
-        const allowedTypes = /jpeg|jpg|png|gif|webp/;
-        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-        const mimetype = allowedTypes.test(file.mimetype);
 
-        if (mimetype && extname) {
-            return cb(null, true);
-        } else {
-            cb(new Error('Only image files (JPEG, PNG, GIF, WebP) are allowed!'));
-        }
-    };
+    }
+
     static verifyToken = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // session based
-            const userId = req.user?._id
-            if (!userId) return next(new AppError('Unauthorized: No session found', 401));
+            // Extract JWT token from Authorization header
+            const authHeader = req.headers.authorization;
+            
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                return next(new AppError('Unauthorized: No token provided', 401));
+            }
+
+            const token = authHeader.replace('Bearer ', ''); // Remove 'Bearer ' prefix
+
+            // Verify JWT signature
+            const decoded = verifyToken(token, false);
+
+            // Verify token exists in database (not revoked)
+            const tokenExists = await verifyTokenInDatabase(token, 'access');
+            if (!tokenExists) {
+                return next(new AppError('Unauthorized: Token is invalid or expired', 401));
+            }
+
+            // Get user from database
+            const user = await User.findById(decoded.userId);
+            if (!user) {
+                return next(new AppError('Unauthorized: User not found', 401));
+            }
+
+            // Attach user to request object
+            req.user = user 
             next();
 
-        } catch (error) {
+        } catch (error: any) {
+            if (error.name === 'TokenExpiredError') {
+                return next(new AppError('Unauthorized: Token has expired', 401));
+            }
+            if (error.name === 'JsonWebTokenError') {
+                return next(new AppError('Unauthorized: Invalid token', 401));
+            }
             next(error);
         }
     }
-  
+
     static loginLimiter = rateLimit({
         windowMs: 15 * 60 * 1000,
         limit: 3, // e.g., 5 login attempts per window
@@ -67,28 +98,40 @@ export class Middleware {
         }
     });
     // Configure multer
-    static upload = ({ destination = "uploads", fileSize = 5, maxFiles = 1 }: { destination: string, fileSize: number, maxFiles: number }) => {
+    static upload = ({ destination = "uploads", fileSize = 5, maxFiles = 1, fileType }: { destination: string, fileSize: number, maxFiles: number, fileType: "image" | "video" | "document" | "audio" | "all" | "" }) => {
+
+
         return multer({
             storage: multer.diskStorage({
                 destination: (req, file, cb) => {
                     cb(null, destination);
                 },
                 filename: (req, file, cb) => {
-                    // Generate unique filename with timestamp and UUID
                     const uniqueSuffix = Date.now() + '-' + uuidv4();
                     const extension = path.extname(file.originalname);
                     cb(null, `${file.fieldname}-${uniqueSuffix}${extension}`);
                 }
             }),
             limits: {
-                fileSize: fileSize * 1024 * 1024, // filesize * MB limit
-                files: maxFiles // Maximum  files
+                fileSize: fileSize * 1024 * 1024,
+                files: maxFiles
             },
-            fileFilter: this.fileFilter
+            fileFilter: (req, file, cb) => {
+                if (fileType === 'all' || fileType === '') {
+                    cb(null, true);
+                } else {
+                    const allowedMimes = mimeTypeMap[fileType] || [];
+                    if (allowedMimes.includes(file.mimetype)) {
+                        cb(null, true);
+                    } else {
+                        cb(new AppError(`Only ${fileType} files are allowed!`, 400));
+                    }
+                }
+            }
         })
     }
     // Error handling middleware
-    static handleUploadError = (error: any, req: any, res: any, next: any) => {
+    static handleUploadError = (error: any, req: Request, res: Response, next: NextFunction) => {
         if (error instanceof multer.MulterError) {
             if (error.code === 'LIMIT_FILE_SIZE') {
                 return res.status(400).json({

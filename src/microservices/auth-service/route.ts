@@ -19,8 +19,8 @@ const validatePasswordReset = Middleware.requestValidate(authPasswordResetSchema
 
 router.post("/register", validateRegistration, registerUser);
 router.post("/login", Middleware.loginLimiter, validateLogin, loginUser);
-router.post("/logout", logout);
+router.post("/logout",Middleware.verifyToken, logout);
 router.post('/forget-password', Middleware.loginLimiter, validatePasswordResetRequest, forgotPassword);
 router.post('/reset-password', Middleware.loginLimiter, validatePasswordReset, resetPassword);
-router.get('/current-user',currentLoginUser)
+router.get('/current-user',Middleware.verifyToken, currentLoginUser)
 export default router;

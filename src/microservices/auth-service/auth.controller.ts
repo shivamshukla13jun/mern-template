@@ -6,6 +6,8 @@ import sendEmail from "libs/sendEmail";
 import config from "config";
 import ejs from "ejs";
 import path from "path";
+import { generateAccessToken, generateRefreshToken, saveTokenToDatabase, getTokenExpirationSeconds, revokeToken } from "libs/jwt";
+
 /**
  * @description Create New User
  * @type POST 
@@ -50,11 +52,33 @@ const loginUser =
       throw new AppError("Invalid credentials", 400);
     }
 
+    // Generate JWT tokens
+    const tokenPayload = {
+      userId: checkUser._id.toString(),
+      email: checkUser.email,
+      role: checkUser.role,
+    };
+
+    const accessToken = generateAccessToken(tokenPayload);
+    const refreshToken = generateRefreshToken(tokenPayload);
+
+    // Save tokens to database with TTL
+    const accessTokenExpiry = getTokenExpirationSeconds('access');
+    const refreshTokenExpiry = getTokenExpirationSeconds('refresh');
+
+    await saveTokenToDatabase(checkUser._id, accessToken, 'access', accessTokenExpiry);
+    await saveTokenToDatabase(checkUser._id, refreshToken, 'refresh', refreshTokenExpiry);
+
     // Remove sensitive info from returned user data
     const { password, isBlocked, ...userData } = checkUser.toJSON();
       res.status(200).json({
         success: true,
-        data: userData,
+        data: {
+          user: userData,
+          accessToken,
+          refreshToken,
+          expiresIn: accessTokenExpiry,
+        },
         message: "Login successful",
       });
     } catch (error) {
@@ -131,9 +155,13 @@ const resetPassword =
     }    
   }
 
- const logout = (req: Request, res: Response, next: NextFunction) => {
+ const logout = async (req: Request, res: Response, next: NextFunction) => {
   try {
-  
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      await revokeToken(token);
+    }
   return res.status(200).json({ success: true, message: 'Logged out successfully' });
 } catch (error) {
   next(error)
